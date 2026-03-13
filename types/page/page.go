@@ -1,6 +1,7 @@
 package page
 
 import (
+	"VirtualMemoryManagement/config"
 	"VirtualMemoryManagement/types/bitmap"
 	"time"
 )
@@ -13,19 +14,47 @@ type Page struct {
 	AccessCounter  int       // кол-во обращений
 	WriteProtected bool      // защита от записи
 	bitmap         *bitmap.BitMap
-	Data           []byte // данные страницы
+	data           []byte // данные страницы
 }
 
-func NewPage(number int, dataSize int) *Page {
+// New Создать без данных
+func New(number int, elemSize int) *Page {
+	dataSize := config.PageDataSize(elemSize)
 	return &Page{
 		AbsoluteNumber: number,
 		Dirty:          false,
 		AccessTime:     time.Now(),
-		AccessCounter:  0,
-		WriteProtected: false,
 		bitmap:         bitmap.New(),
-		Data:           make([]byte, dataSize),
+		data:           make([]byte, dataSize),
 	}
+}
+
+// NewWithData Создать с готовыми данными
+func NewWithData(number int, elemSize int, bitmapData []byte, pageData []byte) (*Page, error) {
+	p := New(number, elemSize)
+	if err := p.bitmap.FromBytes(bitmapData); err != nil {
+		return nil, err
+	}
+	copy(p.data, pageData)
+	return p, nil
+}
+
+func (p *Page) Bitmap() *bitmap.BitMap {
+	return p.bitmap
+}
+
+func (p *Page) Data() []byte {
+	return p.data
+}
+
+func (p *Page) MarkAccessed() {
+	p.AccessTime = time.Now()
+	p.AccessCounter++
+}
+
+func (p *Page) MakeDirty() {
+	p.Dirty = true
+	p.MarkAccessed()
 }
 
 func (p *Page) SetBit(pos int) error {
@@ -40,6 +69,6 @@ func (p *Page) IsBitSet(pos int) (bool, error) {
 	return p.bitmap.IsSet(pos)
 }
 
-func (p *Page) BitmapBytes() []byte {
-	return p.bitmap.Bytes()
+func (p *Page) DataSize() int {
+	return len(p.data)
 }
