@@ -1,3 +1,4 @@
+// Package virtualmemory provides virtual memory array management with paging and caching.
 package virtualmemory
 
 import (
@@ -12,21 +13,32 @@ import (
 	"time"
 )
 
-const (
-	MinBufferSize = 3
-)
-
 type VirtualArray struct {
-	pageFile     *storage.PageFile
-	varcharFile  *storage.VarcharFile
+	pageStorage  storage.PageStorage
+	varcharStore storage.VarcharStorage
 	arrayInfo    *array.Info
-	pageCache    *cache.LRUCache
+	pageCache    cache.Cache
 	varcharIndex map[int]int64
+	cacheSize    int
 }
 
+// Create creates a new virtual array with the specified parameters.
+// Uses DefaultCacheSize from config for cache capacity.
 func Create(filename string, size int, typ array.Type, stringLength int) (*VirtualArray, error) {
+	return CreateWithCacheSize(filename, size, typ, stringLength, config.DefaultCacheSize)
+}
+
+// CreateWithCacheSize creates a new virtual array with a custom cache size.
+func CreateWithCacheSize(filename string, size int, typ array.Type, stringLength int, cacheSize int) (*VirtualArray, error) {
 	if size <= 0 {
 		return nil, errors.ErrInvalidType
+	}
+
+	if cacheSize < config.MinCacheSize {
+		cacheSize = config.MinCacheSize
+	}
+	if cacheSize > config.MaxCacheSize {
+		cacheSize = config.MaxCacheSize
 	}
 
 	pageFile := storage.NewPageFile(filename)
@@ -35,18 +47,19 @@ func Create(filename string, size int, typ array.Type, stringLength int) (*Virtu
 	}
 
 	va := &VirtualArray{
-		pageFile:     pageFile,
+		pageStorage:  pageFile,
 		arrayInfo:    pageFile.ArrayInfo(),
-		pageCache:    cache.NewLRU(MinBufferSize),
+		pageCache:    cache.NewLRU(cacheSize),
 		varcharIndex: make(map[int]int64),
+		cacheSize:    cacheSize,
 	}
 
 	if typ == array.TypeVarchar {
 		varcharFile := storage.NewVarcharFile(filename + ".varchar")
 		if err := varcharFile.Create(); err != nil {
-			return nil, err
+			return nil, errors.NewErrorWithWrapped(errors.ErrCodeFileOperation, "failed to create varchar file", err)
 		}
-		va.varcharFile = varcharFile
+		va.varcharStore = varcharFile
 	}
 
 	if err := va.loadInitialPages(); err != nil {
@@ -56,25 +69,39 @@ func Create(filename string, size int, typ array.Type, stringLength int) (*Virtu
 	return va, nil
 }
 
+// Open opens an existing virtual array from a file.
 func Open(filename string) (*VirtualArray, error) {
+	return OpenWithCacheSize(filename, config.DefaultCacheSize)
+}
+
+// OpenWithCacheSize opens an existing virtual array with a custom cache size.
+func OpenWithCacheSize(filename string, cacheSize int) (*VirtualArray, error) {
+	if cacheSize < config.MinCacheSize {
+		cacheSize = config.MinCacheSize
+	}
+	if cacheSize > config.MaxCacheSize {
+		cacheSize = config.MaxCacheSize
+	}
+
 	pageFile := storage.NewPageFile(filename)
 	if err := pageFile.Open(filename); err != nil {
 		return nil, err
 	}
 
 	va := &VirtualArray{
-		pageFile:     pageFile,
+		pageStorage:  pageFile,
 		arrayInfo:    pageFile.ArrayInfo(),
-		pageCache:    cache.NewLRU(MinBufferSize),
+		pageCache:    cache.NewLRU(cacheSize),
 		varcharIndex: make(map[int]int64),
+		cacheSize:    cacheSize,
 	}
 
 	if va.arrayInfo.Type == array.TypeVarchar {
 		varcharFile := storage.NewVarcharFile(filename + ".varchar")
 		if err := varcharFile.Open(); err != nil {
-			return nil, err
+			return nil, errors.NewErrorWithWrapped(errors.ErrCodeFileOperation, "failed to open varchar file", err)
 		}
-		va.varcharFile = varcharFile
+		va.varcharStore = varcharFile
 
 		if err := va.loadVarcharIndex(); err != nil {
 			return nil, err
@@ -88,12 +115,13 @@ func Open(filename string) (*VirtualArray, error) {
 	return va, nil
 }
 
+// Close closes the virtual array and flushes all dirty pages.
 func (va *VirtualArray) Close() error {
-	if err := va.pageFile.Close(); err != nil {
+	if err := va.pageStorage.Close(); err != nil {
 		return err
 	}
-	if va.varcharFile != nil {
-		if err := va.varcharFile.Close(); err != nil {
+	if va.varcharStore != nil {
+		if err := va.varcharStore.Close(); err != nil {
 			return err
 		}
 	}
@@ -122,10 +150,10 @@ func (va *VirtualArray) Read(index int) (interface{}, error) {
 		if varcharOffset == 0 {
 			return "", nil
 		}
-		if va.varcharFile == nil {
+		if va.varcharStore == nil {
 			return "", errors.ErrFileOperation
 		}
-		str, err := va.varcharFile.ReadString(varcharOffset)
+		str, err := va.varcharStore.ReadString(varcharOffset)
 		if err != nil {
 			return "", nil
 		}
@@ -167,12 +195,12 @@ func (va *VirtualArray) Write(index int, value interface{}) error {
 			return errors.ErrInvalidType
 		}
 
-		varcharOffset, err := va.varcharFile.GetCurrentOffset()
+		varcharOffset, err := va.varcharStore.GetCurrentOffset()
 		if err != nil {
 			return err
 		}
 
-		if err := va.varcharFile.WriteString(varcharOffset, strVal); err != nil {
+		if err := va.varcharStore.WriteString(varcharOffset, strVal); err != nil {
 			return err
 		}
 
@@ -215,14 +243,14 @@ func (va *VirtualArray) ensurePageInCache(pageNumber int) (*page.Page, error) {
 		return p, nil
 	}
 
-	p, err := va.pageFile.ReadPage(pageNumber)
+	p, err := va.pageStorage.ReadPage(pageNumber)
 	if err != nil {
 		return nil, err
 	}
 
 	evicted := va.pageCache.Put(p)
 	if evicted != nil && evicted.Dirty {
-		if err := va.pageFile.WritePage(evicted); err != nil {
+		if err := va.pageStorage.WritePage(evicted); err != nil {
 			return nil, err
 		}
 	}
@@ -232,7 +260,7 @@ func (va *VirtualArray) ensurePageInCache(pageNumber int) (*page.Page, error) {
 }
 
 func (va *VirtualArray) loadInitialPages() error {
-	count := MinBufferSize
+	count := va.cacheSize
 	if count > va.arrayInfo.PageCount {
 		count = va.arrayInfo.PageCount
 	}
@@ -242,9 +270,10 @@ func (va *VirtualArray) loadInitialPages() error {
 			continue
 		}
 
-		p, err := va.pageFile.ReadPage(i)
+		p, err := va.pageStorage.ReadPage(i)
 		if err != nil {
-			if err == errors.ErrFileOperation {
+			// Handle missing pages gracefully - they'll be created on demand
+			if errors.Is(err, errors.ErrFileOperation) {
 				p = page.New(i, va.arrayInfo.ElementSize)
 			} else {
 				return err
@@ -316,11 +345,12 @@ func (va *VirtualArray) writeChar(data []byte, offset int, value string, length 
 	}
 }
 
+// FlushDirtyPages writes all dirty pages back to storage.
 func (va *VirtualArray) FlushDirtyPages() error {
 	pages := va.pageCache.All()
 	for _, p := range pages {
 		if p.Dirty {
-			if err := va.pageFile.WritePage(p); err != nil {
+			if err := va.pageStorage.WritePage(p); err != nil {
 				return err
 			}
 			p.Dirty = false

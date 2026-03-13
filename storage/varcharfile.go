@@ -7,12 +7,16 @@ import (
 	"os"
 )
 
+// VarcharFile implements the VarcharStorage interface for variable-length string persistence.
 type VarcharFile struct {
 	file     *os.File
 	filename string
 	binaryIO *BinaryIO
 	offset   int64
 }
+
+// Verify that VarcharFile implements VarcharStorage interface
+var _ VarcharStorage = (*VarcharFile)(nil)
 
 func NewVarcharFile(filename string) *VarcharFile {
 	return &VarcharFile{
@@ -21,6 +25,7 @@ func NewVarcharFile(filename string) *VarcharFile {
 	}
 }
 
+// Create initializes a new varchar file.
 func (vf *VarcharFile) Create() error {
 	f, err := os.Create(vf.filename)
 	if err != nil {
@@ -35,6 +40,7 @@ func (vf *VarcharFile) Create() error {
 	return nil
 }
 
+// Open opens an existing varchar file for reading and writing.
 func (vf *VarcharFile) Open() error {
 	f, err := os.OpenFile(vf.filename, os.O_RDWR, 0644)
 	if err != nil {
@@ -53,6 +59,7 @@ func (vf *VarcharFile) Open() error {
 	return nil
 }
 
+// Close closes the varchar file.
 func (vf *VarcharFile) Close() error {
 	if vf.file != nil {
 		return vf.file.Close()
@@ -60,6 +67,7 @@ func (vf *VarcharFile) Close() error {
 	return nil
 }
 
+// WriteString writes a string at the specified offset and updates the internal offset pointer.
 func (vf *VarcharFile) WriteString(offset int64, s string) error {
 	if _, err := vf.file.Seek(offset, io.SeekStart); err != nil {
 		return errors.ErrFileOperation
@@ -81,6 +89,7 @@ func (vf *VarcharFile) WriteString(offset int64, s string) error {
 	return nil
 }
 
+// ReadString reads a string from the specified offset.
 func (vf *VarcharFile) ReadString(offset int64) (string, error) {
 	if _, err := vf.file.Seek(offset, io.SeekStart); err != nil {
 		return "", errors.ErrFileOperation
@@ -103,6 +112,7 @@ func (vf *VarcharFile) ReadString(offset int64) (string, error) {
 	return string(data), nil
 }
 
+// GetCurrentOffset returns the current write position in the file.
 func (vf *VarcharFile) GetCurrentOffset() (int64, error) {
 	return vf.offset, nil
 }

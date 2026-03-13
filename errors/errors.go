@@ -1,14 +1,26 @@
 package errors
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 type VMMError struct {
 	Code    int
 	Message string
+	Err     error
 }
 
 func (e *VMMError) Error() string {
+	if e.Err != nil {
+		return fmt.Sprintf("%s: %v", e.Message, e.Err)
+	}
 	return e.Message
+}
+
+// Unwrap enables errors.Is and errors.As
+func (e *VMMError) Unwrap() error {
+	return e.Err
 }
 
 const (
@@ -24,7 +36,7 @@ const (
 
 var (
 	ErrFileNotFound     = &VMMError{Code: ErrCodeFileNotFound, Message: "File not found"}
-	ErrOutOfMemory      = &VMMError{Code: ErrCodeOutOfMemory, Message: "Out of use"}
+	ErrOutOfMemory      = &VMMError{Code: ErrCodeOutOfMemory, Message: "Out of memory"}
 	ErrIndexOutOfRange  = &VMMError{Code: ErrCodeIndexOutOfRange, Message: "Index out of range"}
 	ErrFileOperation    = &VMMError{Code: ErrCodeFileOperation, Message: "File operation failed"}
 	ErrInvalidType      = &VMMError{Code: ErrCodeInvalidType, Message: "Invalid array type"}
@@ -33,17 +45,21 @@ var (
 	ErrPageNotFound     = &VMMError{Code: ErrCodePageNotFound, Message: "Page not found"}
 )
 
-// NewError Ошибка произвольного содержимого
+// NewError creates a custom error
 func NewError(code int, message string) *VMMError {
 	return &VMMError{Code: code, Message: message}
 }
 
-// GetErrorCode Вернет код ошибки
+func NewErrorWithWrapped(code int, message string, err error) *VMMError {
+	return &VMMError{Code: code, Message: message, Err: err}
+}
+
 func GetErrorCode(err error) int {
 	if err == nil {
 		return 0
 	}
-	if vmmErr, ok := errors.AsType[*VMMError](err); ok {
+	var vmmErr *VMMError
+	if errors.As(err, &vmmErr) {
 		return vmmErr.Code
 	}
 	return -999

@@ -8,6 +8,7 @@ type lruNode struct {
 	next *lruNode
 }
 
+// LRUCache implements the Cache interface using a Least Recently Used eviction policy.
 type LRUCache struct {
 	capacity int
 	head     *lruNode
@@ -15,6 +16,10 @@ type LRUCache struct {
 	pageMap  map[int]*lruNode
 }
 
+// Verify that LRUCache implements Cache interface
+var _ Cache = (*LRUCache)(nil)
+
+// NewLRU creates a new LRU cache with the specified capacity.
 func NewLRU(capacity int) *LRUCache {
 	lru := &LRUCache{
 		capacity: capacity,
@@ -29,6 +34,7 @@ func NewLRU(capacity int) *LRUCache {
 	return lru
 }
 
+// Get retrieves a page from the cache by its number and marks it as accessed.
 func (lru *LRUCache) Get(pageNumber int) *page.Page {
 	if node, exists := lru.pageMap[pageNumber]; exists {
 		lru.moveToFront(node)
@@ -37,6 +43,7 @@ func (lru *LRUCache) Get(pageNumber int) *page.Page {
 	return nil
 }
 
+// Put adds or updates a page in the cache. Returns the evicted page if capacity was reached.
 func (lru *LRUCache) Put(p *page.Page) *page.Page {
 	pageNumber := p.AbsoluteNumber
 
@@ -58,15 +65,18 @@ func (lru *LRUCache) Put(p *page.Page) *page.Page {
 	return evicted
 }
 
+// Contains checks if a page exists in the cache.
 func (lru *LRUCache) Contains(pageNumber int) bool {
 	_, exists := lru.pageMap[pageNumber]
 	return exists
 }
 
+// Size returns the current number of pages in the cache.
 func (lru *LRUCache) Size() int {
 	return len(lru.pageMap)
 }
 
+// All returns a slice of all pages currently in the cache.
 func (lru *LRUCache) All() []*page.Page {
 	var result []*page.Page
 	for _, node := range lru.pageMap {

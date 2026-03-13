@@ -1,6 +1,8 @@
+// Package api provides the public API for Virtual Memory Management operations.
 package api
 
 import (
+	"VirtualMemoryManagement/config"
 	"VirtualMemoryManagement/errors"
 	"VirtualMemoryManagement/types/array"
 	"VirtualMemoryManagement/types/result"
@@ -10,11 +12,36 @@ import (
 )
 
 var (
-	mu       sync.Mutex
-	handles  = make(map[int]*virtualmemory.VirtualArray)
-	nextID   = 1
+	mu        sync.Mutex
+	handles   = make(map[int]*virtualmemory.VirtualArray)
+	nextID    = 1
+	cacheSize = config.DefaultCacheSize
 )
 
+func SetCacheSize(size int) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if size < config.MinCacheSize {
+		size = config.MinCacheSize
+	}
+	if size > config.MaxCacheSize {
+		size = config.MaxCacheSize
+	}
+	cacheSize = size
+}
+
+func GetCacheSize() int {
+	mu.Lock()
+	defer mu.Unlock()
+	return cacheSize
+}
+
+func VMCreate(filename string, size int, typ string, stringLength int) result.Result {
+	mu.Lock()
+	defer mu.Unlock()
+
+// VMCreate creates a new virtual array with the specified parameters.
 func VMCreate(filename string, size int, typ string, stringLength int) result.Result {
 	mu.Lock()
 	defer mu.Unlock()
@@ -31,7 +58,7 @@ func VMCreate(filename string, size int, typ string, stringLength int) result.Re
 		return result.ErrorWithCode(errors.ErrCodeInvalidType, "Unknown type: "+typ)
 	}
 
-	va, err := virtualmemory.Create(filename, size, arrayType, stringLength)
+	va, err := virtualmemory.CreateWithCacheSize(filename, size, arrayType, stringLength, cacheSize)
 	if err != nil {
 		return result.Error(err)
 	}
@@ -47,7 +74,7 @@ func VMOpen(filename string) result.Result {
 	mu.Lock()
 	defer mu.Unlock()
 
-	va, err := virtualmemory.Open(filename)
+	va, err := virtualmemory.OpenWithCacheSize(filename, cacheSize)
 	if err != nil {
 		return result.Error(err)
 	}
@@ -59,6 +86,7 @@ func VMOpen(filename string) result.Result {
 	return result.Success(filename)
 }
 
+// VMClose ensures the handle is always removed from the map, even if errors occur
 func VMClose(handle int) result.Result {
 	mu.Lock()
 	defer mu.Unlock()
@@ -68,6 +96,9 @@ func VMClose(handle int) result.Result {
 		return result.ErrorWithCode(errors.ErrCodeInvalidHandle, "Invalid handle")
 	}
 
+	// Ensure handle is always removed, even if errors occur
+	defer delete(handles, handle)
+
 	if err := va.FlushDirtyPages(); err != nil {
 		return result.Error(err)
 	}
@@ -76,7 +107,6 @@ func VMClose(handle int) result.Result {
 		return result.Error(err)
 	}
 
-	delete(handles, handle)
 	return result.Success("Closed")
 }
 
@@ -200,6 +230,6 @@ func VMStats(handle int) result.Result {
 	return result.Success(stats)
 }
 
-
+func VMHelp(filename string) result.Result {
 
 

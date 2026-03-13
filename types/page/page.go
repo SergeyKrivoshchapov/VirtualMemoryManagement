@@ -6,18 +6,17 @@ import (
 	"time"
 )
 
-// Page страница в памяти
 type Page struct {
-	AbsoluteNumber int       // абс номер страницы в файле
-	Dirty          bool      // флаг модификации
-	AccessTime     time.Time // последнее обращение
-	AccessCounter  int       // кол-во обращений
-	WriteProtected bool      // защита от записи
+	AbsoluteNumber int
+	Dirty          bool
+	AccessTime     time.Time
+	AccessCounter  int
+	WriteProtected bool
 	bitmap         *bitmap.BitMap
-	data           []byte // данные страницы
+	data           []byte
 }
 
-// New Создать без данных
+// New creates a new page without data
 func New(number int, elemSize int) *Page {
 	dataSize := config.PageDataSize(elemSize)
 	return &Page{
@@ -29,7 +28,7 @@ func New(number int, elemSize int) *Page {
 	}
 }
 
-// NewWithData Создать с готовыми данными
+// NewWithData creates a page and loads data from byte slices
 func NewWithData(number int, elemSize int, bitmapData []byte, pageData []byte) (*Page, error) {
 	p := New(number, elemSize)
 	if err := p.bitmap.FromBytes(bitmapData); err != nil {

@@ -1,12 +1,15 @@
 package config
 
 const (
-	BitsPerPage      = 128             // 128 элементов на страницу
-	BytesPerBitmap   = BitsPerPage / 8 // bitmap в байтах
-	PhysicalPageSize = 512             // 512 байт - физ размер страницы по ТЗ
+	BitsPerPage      = 128
+	BytesPerBitmap   = BitsPerPage / 8
+	PhysicalPageSize = 512
+
+	MinCacheSize     = 3
+	MaxCacheSize     = 100
+	DefaultCacheSize = 10
 )
 
-// PageDataSize размер данных страницы для типа
 func PageDataSize(elemSize int) int {
 	return BitsPerPage * elemSize
 }
@@ -14,5 +17,5 @@ func PageDataSize(elemSize int) int {
 func TotalPageSize(elemSize int) int {
 	dataSize := PageDataSize(elemSize)
 	total := BytesPerBitmap + dataSize
-	return ((total + PhysicalPageSize - 1) / PhysicalPageSize) * PhysicalPageSize // Выравниваем до PhysicalPageSize
+	return ((total + PhysicalPageSize - 1) / PhysicalPageSize) * PhysicalPageSize
 }

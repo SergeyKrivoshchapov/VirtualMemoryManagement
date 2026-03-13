@@ -14,6 +14,7 @@ const (
 	Signature     = "ВМ"
 )
 
+// PageFile implements the PageStorage interface for file-based page persistence.
 type PageFile struct {
 	file      *os.File
 	filename  string
@@ -21,6 +22,10 @@ type PageFile struct {
 	binaryIO  *BinaryIO
 }
 
+// Verify that PageFile implements PageStorage interface
+var _ PageStorage = (*PageFile)(nil)
+
+// NewPageFile creates a new PageFile instance for the given filename.
 func NewPageFile(filename string) *PageFile {
 	return &PageFile{
 		filename: filename,
@@ -28,6 +33,7 @@ func NewPageFile(filename string) *PageFile {
 	}
 }
 
+// Create initializes a new page file with the specified array configuration.
 func (pf *PageFile) Create(size int, typ array.Type, stringLength int) error {
 	f, err := os.OpenFile(pf.filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
@@ -61,6 +67,7 @@ func (pf *PageFile) Create(size int, typ array.Type, stringLength int) error {
 	return nil
 }
 
+// Open opens an existing page file and reads its header information.
 func (pf *PageFile) Open(filename string) error {
 	f, err := os.OpenFile(filename, os.O_RDWR, 0644)
 	if err != nil {
@@ -88,6 +95,7 @@ func (pf *PageFile) Open(filename string) error {
 	return nil
 }
 
+// Close closes the page file.
 func (pf *PageFile) Close() error {
 	if pf.file != nil {
 		return pf.file.Close()
@@ -95,6 +103,7 @@ func (pf *PageFile) Close() error {
 	return nil
 }
 
+// ReadPage reads a page from storage at the specified page number.
 func (pf *PageFile) ReadPage(pageNumber int) (*page.Page, error) {
 	if pageNumber < 0 || pageNumber >= pf.arrayInfo.PageCount {
 		return nil, errors.ErrIndexOutOfRange
@@ -123,6 +132,7 @@ func (pf *PageFile) ReadPage(pageNumber int) (*page.Page, error) {
 	return p, nil
 }
 
+// WritePage writes a page to storage.
 func (pf *PageFile) WritePage(p *page.Page) error {
 	if p.AbsoluteNumber < 0 || p.AbsoluteNumber >= pf.arrayInfo.PageCount {
 		return errors.ErrIndexOutOfRange
@@ -144,10 +154,12 @@ func (pf *PageFile) WritePage(p *page.Page) error {
 	return nil
 }
 
+// ArrayInfo returns the array configuration information.
 func (pf *PageFile) ArrayInfo() *array.Info {
 	return pf.arrayInfo
 }
 
+// calculatePageOffset calculates the byte offset of a page in the file.
 func (pf *PageFile) calculatePageOffset(pageNumber int) int64 {
 	headerSize := int64(SignatureSize) + int64((&Header{}).Size_())
 	pageSize := int64(config.TotalPageSize(pf.arrayInfo.ElementSize))
