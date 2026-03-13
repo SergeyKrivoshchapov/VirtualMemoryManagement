@@ -1,3 +1,5 @@
+// +build dll
+
 package main
 
 /*
@@ -10,4 +12,5 @@ typedef struct {
 } Result;
 */
 import "C"
+
 

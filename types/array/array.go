@@ -24,11 +24,11 @@ func (t Type) String() string {
 }
 
 type Info struct {
-	Size         int // количество элементов массива
+	Size         int
 	Type         Type
-	StringLength int // для char и varchar
-	elementSize  int
-	pageCount    int
+	StringLength int
+	ElementSize  int
+	PageCount    int
 }
 
 func NewInfo(size int, typ Type, stringLength int) *Info {

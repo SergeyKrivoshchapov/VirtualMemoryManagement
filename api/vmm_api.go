@@ -5,6 +5,7 @@ import (
 	"VirtualMemoryManagement/types/array"
 	"VirtualMemoryManagement/types/result"
 	"VirtualMemoryManagement/virtualmemory"
+	"strconv"
 	"sync"
 )
 
@@ -96,7 +97,7 @@ func VMRead(handle int, index int) result.Result {
 	var resultStr string
 	switch v := value.(type) {
 	case int32:
-		resultStr = string(rune(v))
+		resultStr = strconv.FormatInt(int64(v), 10)
 	case string:
 		resultStr = v
 	default:
@@ -120,14 +121,11 @@ func VMWrite(handle int, index int, value string) result.Result {
 	var writeValue interface{}
 	switch arrayInfo.Type {
 	case array.TypeInt:
-		var intVal int32
-		for i, c := range value {
-			if i >= 4 {
-				break
-			}
-			intVal |= int32(c) << (i * 8)
+		intVal, err := strconv.ParseInt(value, 10, 32)
+		if err != nil {
+			intVal = 0
 		}
-		writeValue = intVal
+		writeValue = int32(intVal)
 	case array.TypeChar, array.TypeVarchar:
 		writeValue = value
 	default:
@@ -201,4 +199,7 @@ func VMStats(handle int) result.Result {
 	stats := va.GetStats()
 	return result.Success(stats)
 }
+
+
+
 
