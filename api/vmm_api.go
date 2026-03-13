@@ -1,0 +1,204 @@
+package api
+
+import (
+	"VirtualMemoryManagement/errors"
+	"VirtualMemoryManagement/types/array"
+	"VirtualMemoryManagement/types/result"
+	"VirtualMemoryManagement/virtualmemory"
+	"sync"
+)
+
+var (
+	mu       sync.Mutex
+	handles  = make(map[int]*virtualmemory.VirtualArray)
+	nextID   = 1
+)
+
+func VMCreate(filename string, size int, typ string, stringLength int) result.Result {
+	mu.Lock()
+	defer mu.Unlock()
+
+	var arrayType array.Type
+	switch typ {
+	case "int", "I":
+		arrayType = array.TypeInt
+	case "char", "C":
+		arrayType = array.TypeChar
+	case "varchar", "V":
+		arrayType = array.TypeVarchar
+	default:
+		return result.ErrorWithCode(errors.ErrCodeInvalidType, "Unknown type: "+typ)
+	}
+
+	va, err := virtualmemory.Create(filename, size, arrayType, stringLength)
+	if err != nil {
+		return result.Error(err)
+	}
+
+	id := nextID
+	nextID++
+	handles[id] = va
+
+	return result.Success(filename)
+}
+
+func VMOpen(filename string) result.Result {
+	mu.Lock()
+	defer mu.Unlock()
+
+	va, err := virtualmemory.Open(filename)
+	if err != nil {
+		return result.Error(err)
+	}
+
+	id := nextID
+	nextID++
+	handles[id] = va
+
+	return result.Success(filename)
+}
+
+func VMClose(handle int) result.Result {
+	mu.Lock()
+	defer mu.Unlock()
+
+	va, exists := handles[handle]
+	if !exists {
+		return result.ErrorWithCode(errors.ErrCodeInvalidHandle, "Invalid handle")
+	}
+
+	if err := va.FlushDirtyPages(); err != nil {
+		return result.Error(err)
+	}
+
+	if err := va.Close(); err != nil {
+		return result.Error(err)
+	}
+
+	delete(handles, handle)
+	return result.Success("Closed")
+}
+
+func VMRead(handle int, index int) result.Result {
+	mu.Lock()
+	va, exists := handles[handle]
+	mu.Unlock()
+
+	if !exists {
+		return result.ErrorWithCode(errors.ErrCodeInvalidHandle, "Invalid handle")
+	}
+
+	value, err := va.Read(index)
+	if err != nil {
+		return result.Error(err)
+	}
+
+	var resultStr string
+	switch v := value.(type) {
+	case int32:
+		resultStr = string(rune(v))
+	case string:
+		resultStr = v
+	default:
+		resultStr = ""
+	}
+
+	return result.Success(resultStr)
+}
+
+func VMWrite(handle int, index int, value string) result.Result {
+	mu.Lock()
+	va, exists := handles[handle]
+	mu.Unlock()
+
+	if !exists {
+		return result.ErrorWithCode(errors.ErrCodeInvalidHandle, "Invalid handle")
+	}
+
+	arrayInfo := va.ArrayInfo()
+
+	var writeValue interface{}
+	switch arrayInfo.Type {
+	case array.TypeInt:
+		var intVal int32
+		for i, c := range value {
+			if i >= 4 {
+				break
+			}
+			intVal |= int32(c) << (i * 8)
+		}
+		writeValue = intVal
+	case array.TypeChar, array.TypeVarchar:
+		writeValue = value
+	default:
+		return result.ErrorWithCode(errors.ErrCodeInvalidType, "Invalid array type")
+	}
+
+	if err := va.Write(index, writeValue); err != nil {
+		return result.Error(err)
+	}
+
+	return result.Success("Written")
+}
+
+func VMHelp(filename string) result.Result {
+	help := `Virtual Memory Manager Commands:
+Create <filename> <type> [<stringLength>] - Create new array
+  Types: int, char(length), varchar(maxlength)
+  Example: Create myfile.vm int
+           Create myfile.vm char(50)
+           Create myfile.vm varchar(100)
+
+Open <filename> - Open existing array file
+
+Close <handle> - Close array and flush to disk
+
+Read <handle> <index> - Read element at index
+
+Write <handle> <index> <value> - Write value to index
+  String values must be quoted: "my string"
+
+Stats <handle> - Show statistics
+
+Help [<filename>] - Show this help
+
+Exit - Close all and exit
+`
+
+	return result.Success(help)
+}
+
+func GetHandle() int {
+	mu.Lock()
+	defer mu.Unlock()
+
+	for id := range handles {
+		return id
+	}
+	return -1
+}
+
+func GetAllHandles() []int {
+	mu.Lock()
+	defer mu.Unlock()
+
+	var ids []int
+	for id := range handles {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
+func VMStats(handle int) result.Result {
+	mu.Lock()
+	va, exists := handles[handle]
+	mu.Unlock()
+
+	if !exists {
+		return result.ErrorWithCode(errors.ErrCodeInvalidHandle, "Invalid handle")
+	}
+
+	stats := va.GetStats()
+	return result.Success(stats)
+}
+
