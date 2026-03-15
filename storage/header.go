@@ -41,7 +41,9 @@ func (h *Header) ReadFrom(r io.Reader) error {
 
 func (h *Header) Size_() int {
 	buf := new(bytes.Buffer)
-	h.WriteTo(buf)
+	err := h.WriteTo(buf)
+	if err != nil {
+		return 0
+	}
 	return buf.Len()
 }
-

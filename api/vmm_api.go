@@ -1,4 +1,3 @@
-// Package api provides the public API for Virtual Memory Management operations.
 package api
 
 import (
@@ -37,11 +36,6 @@ func GetCacheSize() int {
 	return cacheSize
 }
 
-func VMCreate(filename string, size int, typ string, stringLength int) result.Result {
-	mu.Lock()
-	defer mu.Unlock()
-
-// VMCreate creates a new virtual array with the specified parameters.
 func VMCreate(filename string, size int, typ string, stringLength int) result.Result {
 	mu.Lock()
 	defer mu.Unlock()
@@ -229,7 +223,3 @@ func VMStats(handle int) result.Result {
 	stats := va.GetStats()
 	return result.Success(stats)
 }
-
-func VMHelp(filename string) result.Result {
-
-

@@ -8,7 +8,6 @@ type lruNode struct {
 	next *lruNode
 }
 
-// LRUCache implements the Cache interface using a Least Recently Used eviction policy.
 type LRUCache struct {
 	capacity int
 	head     *lruNode
@@ -16,10 +15,8 @@ type LRUCache struct {
 	pageMap  map[int]*lruNode
 }
 
-// Verify that LRUCache implements Cache interface
 var _ Cache = (*LRUCache)(nil)
 
-// NewLRU creates a new LRU cache with the specified capacity.
 func NewLRU(capacity int) *LRUCache {
 	lru := &LRUCache{
 		capacity: capacity,
@@ -34,7 +31,6 @@ func NewLRU(capacity int) *LRUCache {
 	return lru
 }
 
-// Get retrieves a page from the cache by its number and marks it as accessed.
 func (lru *LRUCache) Get(pageNumber int) *page.Page {
 	if node, exists := lru.pageMap[pageNumber]; exists {
 		lru.moveToFront(node)
@@ -43,7 +39,6 @@ func (lru *LRUCache) Get(pageNumber int) *page.Page {
 	return nil
 }
 
-// Put adds or updates a page in the cache. Returns the evicted page if capacity was reached.
 func (lru *LRUCache) Put(p *page.Page) *page.Page {
 	pageNumber := p.AbsoluteNumber
 
@@ -112,4 +107,3 @@ func (lru *LRUCache) evictLRU() *page.Page {
 	delete(lru.pageMap, node.page.AbsoluteNumber)
 	return node.page
 }
-
