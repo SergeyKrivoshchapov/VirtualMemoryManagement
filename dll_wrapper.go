@@ -1,3 +1,4 @@
+//go:build dll
 // +build dll
 
 package main
@@ -5,58 +6,46 @@ package main
 import (
 	"C"
 	"VirtualMemoryManagement/api"
+	"VirtualMemoryManagement/types/result"
 )
 
-//export VMCreate
-func VMCreate(filename *C.char, size C.int, typ *C.char, stringLength C.int) C.int {
-	filenameGo := C.GoString(filename)
-	typGo := C.GoString(typ)
-	result := api.VMCreate(filenameGo, int(size), typGo, int(stringLength))
-	if result.IsSuccess() {
-		return 1
-	}
-	return 0
-}
-
-//export VMOpen
-func VMOpen(filename *C.char) C.int {
-	filenameGo := C.GoString(filename)
-	result := api.VMOpen(filenameGo)
-	if result.IsSuccess() {
-		return 1
-	}
-	return 0
-}
-
-//export VMClose
-func VMClose(handle C.int) C.int {
-	result := api.VMClose(int(handle))
-	if result.IsSuccess() {
-		return 1
-	}
-	return 0
-}
-
-//export VMRead
-func VMRead(handle C.int, index C.int) C.Result {
-	result := api.VMRead(int(handle), int(index))
+func toGoResultC(r result.Result) C.Result {
 	cResult := C.Result{}
-	cResult.success = C.int32_t(result.Success)
-	cResult.error_code = C.int32_t(result.ErrorCode)
-	for i := 0; i < len(result.Data) && i < 256; i++ {
-		cResult.data[i] = C.char(result.Data[i])
+	cResult.success = C.int32_t(r.Success)
+	cResult.error_code = C.int32_t(r.ErrorCode)
+	for i := 0; i < len(r.Data) && i < 256; i++ {
+		cResult.data[i] = C.char(r.Data[i])
 	}
 	return cResult
 }
 
+//export VMCreate
+func VMCreate(filename *C.char, size C.int, typ *C.char, stringLength C.int) C.Result {
+	filenameGo := C.GoString(filename)
+	typGo := C.GoString(typ)
+	return toGoResultC(api.VMCreate(filenameGo, int(size), typGo, int(stringLength)))
+}
+
+//export VMOpen
+func VMOpen(filename *C.char) C.Result {
+	filenameGo := C.GoString(filename)
+	return toGoResultC(api.VMOpen(filenameGo))
+}
+
+//export VMClose
+func VMClose(handle C.int) C.Result {
+	return toGoResultC(api.VMClose(int(handle)))
+}
+
+//export VMRead
+func VMRead(handle C.int, index C.int) C.Result {
+	return toGoResultC(api.VMRead(int(handle), int(index)))
+}
+
 //export VMWrite
-func VMWrite(handle C.int, index C.int, value *C.char) C.int {
+func VMWrite(handle C.int, index C.int, value *C.char) C.Result {
 	valueGo := C.GoString(value)
-	result := api.VMWrite(int(handle), int(index), valueGo)
-	if result.IsSuccess() {
-		return 1
-	}
-	return 0
+	return toGoResultC(api.VMWrite(int(handle), int(index), valueGo))
 }
 
 //export VMHelp
@@ -65,16 +54,10 @@ func VMHelp(filename *C.char) C.Result {
 	if filename != nil {
 		filenameGo = C.GoString(filename)
 	}
-	result := api.VMHelp(filenameGo)
-	cResult := C.Result{}
-	cResult.success = C.int32_t(result.Success)
-	cResult.error_code = C.int32_t(result.ErrorCode)
-	for i := 0; i < len(result.Data) && i < 256; i++ {
-		cResult.data[i] = C.char(result.Data[i])
-	}
-	return cResult
+	return toGoResultC(api.VMHelp(filenameGo))
 }
 
-
-
-
+//export VMStats
+func VMStats(handle C.int) C.Result {
+	return toGoResultC(api.VMStats(int(handle)))
+}

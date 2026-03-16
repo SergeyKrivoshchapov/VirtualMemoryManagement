@@ -61,7 +61,7 @@ func VMCreate(filename string, size int, typ string, stringLength int) result.Re
 	nextID++
 	handles[id] = va
 
-	return result.Success(filename)
+	return result.Success(strconv.Itoa(id))
 }
 
 func VMOpen(filename string) result.Result {
@@ -166,11 +166,7 @@ func VMWrite(handle int, index int, value string) result.Result {
 func VMHelp(filename string) result.Result {
 	help := `Virtual Memory Manager Commands:
 Create <filename> <type> [<stringLength>] - Create new array
-  Types: int, char(length), varchar(maxlength)
-  Example: Create myfile.vm int
-           Create myfile.vm char(50)
-           Create myfile.vm varchar(100)
-
+Types: int, char(length), varchar(maxlength)
 Open <filename> - Open existing array file
 
 Close <handle> - Close array and flush to disk

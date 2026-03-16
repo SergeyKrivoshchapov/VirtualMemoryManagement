@@ -1,4 +1,3 @@
-// Package virtualmemory provides virtual memory array management with paging and caching.
 package virtualmemory
 
 import (
@@ -272,8 +271,7 @@ func (va *VirtualArray) loadInitialPages() error {
 
 		p, err := va.pageStorage.ReadPage(i)
 		if err != nil {
-			// Handle missing pages gracefully - they'll be created on demand
-			if errors.Is(err, errors.ErrFileOperation) {
+			if errors.GetErrorCode(err) == errors.ErrCodeFileOperation {
 				p = page.New(i, va.arrayInfo.ElementSize)
 			} else {
 				return err
@@ -378,11 +376,3 @@ func (va *VirtualArray) GetStats() string {
 
 	return stats
 }
-
-
-
-
-
-
-
-
