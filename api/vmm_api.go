@@ -6,15 +6,17 @@ import (
 	"VirtualMemoryManagement/types/array"
 	"VirtualMemoryManagement/types/result"
 	"VirtualMemoryManagement/virtualmemory"
+	"os"
 	"strconv"
 	"sync"
 )
 
 var (
-	mu        sync.Mutex
-	handles   = make(map[int]*virtualmemory.VirtualArray)
-	nextID    = 1
-	cacheSize = config.DefaultCacheSize
+	mu          sync.Mutex
+	handles     = make(map[int]*virtualmemory.VirtualArray)
+	nextID      = 1
+	cacheSize   = config.DefaultCacheSize
+	fileHandles = make(map[string]int)
 )
 
 func SetCacheSize(size int) {
@@ -40,6 +42,10 @@ func VMCreate(filename string, size int, typ string, stringLength int) result.Re
 	mu.Lock()
 	defer mu.Unlock()
 
+	if _, err := os.Stat(filename); err == nil {
+		return result.ErrorWithCode(errors.ErrCodeFileOperation, "file already exists")
+	}
+
 	var arrayType array.Type
 	switch typ {
 	case "int", "I":
@@ -57,27 +63,35 @@ func VMCreate(filename string, size int, typ string, stringLength int) result.Re
 		return result.Error(err)
 	}
 
-	id := nextID
-	nextID++
-	handles[id] = va
+	if err := va.Close(); err != nil {
+		return result.Error(err)
+	}
 
-	return result.Success(strconv.Itoa(id))
+	return result.Success("Created")
 }
 
 func VMOpen(filename string) result.Result {
 	mu.Lock()
-	defer mu.Unlock()
+	if _, exists := fileHandles[filename]; exists {
+		mu.Unlock()
+		return result.ErrorWithCode(errors.ErrCodeFileOperation, "file already opened")
+	}
+	mu.Unlock()
 
 	va, err := virtualmemory.OpenWithCacheSize(filename, cacheSize)
 	if err != nil {
 		return result.Error(err)
 	}
 
+	mu.Lock()
+	defer mu.Unlock()
+
 	id := nextID
 	nextID++
 	handles[id] = va
+	fileHandles[filename] = id
 
-	return result.Success(filename)
+	return result.Success(strconv.Itoa(id))
 }
 
 // VMClose ensures the handle is always removed from the map, even if errors occur
@@ -90,8 +104,14 @@ func VMClose(handle int) result.Result {
 		return result.ErrorWithCode(errors.ErrCodeInvalidHandle, "Invalid handle")
 	}
 
-	// Ensure handle is always removed, even if errors occur
-	defer delete(handles, handle)
+	for name, h := range fileHandles {
+		if h == handle {
+			delete(fileHandles, name)
+			break
+		}
+	}
+
+	delete(handles, handle)
 
 	if err := va.FlushDirtyPages(); err != nil {
 		return result.Error(err)
