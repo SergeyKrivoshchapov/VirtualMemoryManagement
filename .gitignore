@@ -1,0 +1,56 @@
+# Скомпилированные бинарные файлы (Go)
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Папки с результатами сборки (Go и C#)
+bin/
+obj/
+# Папка vendor (если появится в будущем)
+vendor/
+
+# Временные файлы и логи
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Настройки IDE
+.idea/
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.DotSettings.user
+*.code-workspace
+
+# Файлы тестового покрытия
+*.cover
+coverage.out
+
+# Файлы зависимостей (Go)
+go.sum  # если он генерируется, обычно его коммитят, но можно игнорировать при особых случаях
+
+# C# специфика (кэш NuGet, временные файлы тестов)
+packages/
+*.nupkg
+project.lock.json
+project.assets.json
+TestResults/
+
+# Если вы используете какие-то конфигурации с секретами (например, appsettings.*.json)
+# appsettings.*.json
+# secrets.json
+
+# Сгенерированные документация и дистрибутивы
+/dist/
+/build/
