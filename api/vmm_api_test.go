@@ -192,8 +192,20 @@ func TestVMReadIndexOutOfRange(t *testing.T) {
 
 	filename := testutils.TempFilePath(dir, "test_range")
 	createResult := VMCreate(filename, 100, "int", 0)
-	handle, _ := strconv.Atoi(createResult.String())
+	if createResult.Success != 1 {
+		t.Fatalf("Expected create success, got error: %s", createResult.String())
+	}
 
+	openResult := VMOpen(filename)
+	if openResult.Success != 1 {
+		t.Fatalf("Expected open success, got error: %s", openResult.String())
+	}
+
+	handle, err := strconv.Atoi(openResult.String())
+
+	if err != nil || handle <= 0 {
+		t.Fatalf("Expected handle to be > 0, got %d", handle)
+	}
 	result := VMRead(handle, 200)
 	if result.Success != 0 {
 		t.Fatal("Expected error for index out of range")
@@ -208,7 +220,18 @@ func TestVMWrite(t *testing.T) {
 
 	filename := testutils.TempFilePath(dir, "test_write")
 	createResult := VMCreate(filename, 1000, "int", 0)
-	handle, _ := strconv.Atoi(createResult.String())
+	if createResult.Success != 1 {
+		t.Fatalf("Expected create success, got error: %s", createResult.String())
+	}
+
+	openResult := VMOpen(filename)
+	if openResult.Success != 1 {
+		t.Fatalf("Expected open success, got error: %s", openResult.String())
+	}
+	handle, err := strconv.Atoi(openResult.String())
+	if err != nil || handle <= 0 {
+		t.Fatalf("Inalid handle: %v (%s)", err, openResult.String())
+	}
 
 	result := VMWrite(handle, 0, "100")
 	if result.Success != 1 {
@@ -231,7 +254,15 @@ func TestVMWriteIndexOutOfRange(t *testing.T) {
 
 	filename := testutils.TempFilePath(dir, "test_write_range")
 	createResult := VMCreate(filename, 100, "int", 0)
-	handle, _ := strconv.Atoi(createResult.String())
+	if createResult.Success != 1 {
+		t.Fatalf("Expected create success, got error: %s", createResult.String())
+	}
+
+	openResult := VMOpen(filename)
+	if openResult.Success != 1 {
+		t.Fatalf("Expected open success, got error: %s", openResult.String())
+	}
+	handle, _ := strconv.Atoi(openResult.String())
 
 	result := VMWrite(handle, 200, "42")
 	if result.Success != 0 {

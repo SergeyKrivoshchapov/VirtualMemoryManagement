@@ -11,7 +11,7 @@ import (
 
 const (
 	SignatureSize = 2
-	Signature     = "ВМ"
+	Signature     = "VM"
 )
 
 type PageFile struct {
