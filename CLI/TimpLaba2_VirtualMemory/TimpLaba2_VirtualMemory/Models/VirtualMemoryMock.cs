@@ -16,8 +16,8 @@ namespace TimpLaba2_VirtualMemory.Models
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern Result VMOpen(string filename);
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int VMClose(int handle);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        public static extern Result VMClose(int handle);
 
 
 
@@ -80,6 +80,12 @@ namespace TimpLaba2_VirtualMemory.Models
     {
         private const string DllName = "vmm.dll";
 
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        public static extern Result VMRead(int handle, int index);
+
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        public static extern Result VMWrite(int handle, int index, string value);
+
         private bool IsThreadClosed = false;
 
         private int _fileHandle;
@@ -91,14 +97,36 @@ namespace TimpLaba2_VirtualMemory.Models
 
         public void WriteValue(int index, string value)
         {
-            Console.WriteLine("WriteValue");
+            if (IsThreadClosed)
+            {
+                throw new ObjectDisposedException(typeof(VMValueMock).FullName, 
+                    "Cannot write to a closed file.");
+            }
+
+            Result result = VMWrite(_fileHandle, index, value);
+
+            if (!result.IsSuccess())
+            {
+                throw new Exception($"Error {result.error_code}: {result.GetDataAsString()}");
+            }
         }
 
         public string ReadValue(int index)
         {
-            Console.WriteLine("ReadValue");
+            if (IsThreadClosed)
+            {
+                throw new ObjectDisposedException(typeof(VMValueMock).FullName, 
+                    "Cannot read to a closed file.");
+            }
 
-            return "";
+            Result result = VMRead(_fileHandle, index);
+
+            if (!result.IsSuccess())
+            {
+                throw new Exception($"Error {result.error_code}: {result.GetDataAsString()}");
+            }
+
+            return result.GetDataAsString();
         }
 
         public void Dispose()
