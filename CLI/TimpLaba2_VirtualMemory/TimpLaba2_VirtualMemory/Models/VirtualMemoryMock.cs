@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -7,29 +8,90 @@ namespace TimpLaba2_VirtualMemory.Models
 {
     public class VirtualMemoryMock : IVirtualMemmoryFileWorker
     {
+        private const string DllName = "vmm.dll";
+
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        public static extern Result VMCreate(string filename, int size, string typ, int? stringLength);
+
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        public static extern Result VMOpen(string filename);
+
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int VMClose(int handle);
+
+
+
+        private static IVirtualMemmoryValueWorker? _openFile = null;
+
+        private static int? _openFileHandle = null;
+
+
+
+        private VirtualMemoryMock() { }
+
+        private static readonly Lazy<VirtualMemoryMock> _instance =
+            new Lazy<VirtualMemoryMock>(() => new VirtualMemoryMock());
+
+        public static VirtualMemoryMock Instance => _instance.Value;
+
         public void CreateFile(string fileName, VMFileType valueType)
         {
-            Console.WriteLine("CreateFile");
-        }
+            Result result = VMCreate(fileName, 10001, valueType.StringFileType, valueType.TypeLength);
 
-        public void CloseFile()
-        {
-            Console.WriteLine("CloseFile");
+            if (!result.IsSuccess())
+            {
+                throw new Exception($"Error {result.error_code}: {result.GetDataAsString()}");
+            }
         }
 
         public IVirtualMemmoryValueWorker OpenFile(string fileName)
         {
-            Console.WriteLine("OpenFile");
+            if (_openFile != null)
+            {
+                _openFile.Dispose();
+                CloseFile();
+            }
 
-            return new VMValueMock();
+            Result result = VMOpen(fileName);
+            
+            if (!result.IsSuccess())
+            {
+                throw new Exception($"Error {result.error_code}: {result.GetDataAsString()}");
+            }
+
+            _openFileHandle = int.Parse(result.GetDataAsString());
+            _openFile = new VMValueMock((int)_openFileHandle);
+
+            return _openFile;
+        }
+
+        public void CloseFile()
+        {
+            if (_openFileHandle != null)
+            {
+                VMClose((int)_openFileHandle);
+                _openFile = null;
+                _openFileHandle = null;
+            }
         }
     }
 
     public class VMValueMock : IVirtualMemmoryValueWorker
     {
-        public void Dispose()
-        {
+        private const string DllName = "vmm.dll";
 
+        private bool IsThreadClosed = false;
+
+        private int _fileHandle;
+
+        public VMValueMock(int fileHandle)
+        {
+            _fileHandle = fileHandle;
+        }
+
+        public void WriteValue(int index, string value)
+        {
+            Console.WriteLine("WriteValue");
         }
 
         public string ReadValue(int index)
@@ -39,9 +101,9 @@ namespace TimpLaba2_VirtualMemory.Models
             return "";
         }
 
-        public void WriteValue(int index, string value)
+        public void Dispose()
         {
-            Console.WriteLine("WriteValue");
+            IsThreadClosed = true;
         }
     }
 
