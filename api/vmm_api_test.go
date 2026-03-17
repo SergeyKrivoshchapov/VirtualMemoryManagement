@@ -327,3 +327,52 @@ func TestVMCreateFileAlreadyExists(t *testing.T) {
 		t.Fatal("Expected error on second create for same file")
 	}
 }
+
+func TestAPIWriteCloseReopenReadInt(t *testing.T) {
+	dir := testutils.TempDir(t)
+	defer testutils.CleanupDir(t, dir)
+
+	filename := testutils.TempFilePath(dir, "api_persist_int")
+
+	createRes := VMCreate(filename, 100, "int", 0)
+	if createRes.Success != 1 {
+		t.Fatalf("Create failed: %s", createRes.String())
+	}
+
+	open1 := VMOpen(filename)
+	if open1.Success != 1 {
+		t.Fatalf("First open failed: %s", open1.String())
+	}
+	handle1, err := strconv.Atoi(open1.String())
+	if err != nil || handle1 <= 0 {
+		t.Fatalf("Invalid handle: %v (%s)", err, open1.String())
+	}
+
+	writeRes := VMWrite(handle1, 5, "777")
+	if writeRes.Success != 1 {
+		t.Fatalf("Write failed: %s", writeRes.String())
+	}
+
+	closeRes := VMClose(handle1)
+	if closeRes.Success != 1 {
+		t.Fatalf("Close failed: %s", closeRes.String())
+	}
+
+	open2 := VMOpen(filename)
+	if open2.Success != 1 {
+		t.Fatalf("Second open failed: %s", open2.String())
+	}
+	handle2, err := strconv.Atoi(open2.String())
+	if err != nil || handle2 <= 0 {
+		t.Fatalf("Invalid handle2: %v (%s)", err, open2.String())
+	}
+	defer VMClose(handle2)
+
+	readRes := VMRead(handle2, 5)
+	if readRes.Success != 1 {
+		t.Fatalf("Read after reopen failed: %s", readRes.String())
+	}
+	if readRes.String() != "777" {
+		t.Fatalf("Expected 777, got %s", readRes.String())
+	}
+}
