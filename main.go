@@ -1,5 +1,5 @@
-//go:build !dll
-// +build !dll
+//go:build dll
+// +build dll
 
 package main
 
