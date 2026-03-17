@@ -11,7 +11,7 @@ namespace TimpLaba2_VirtualMemory.Models
         private const string DllName = "vmm.dll";
 
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern Result VMCreate(string filename, int size, string typ, int? stringLength);
+        public static extern Result VMCreate(string filename, int size, string typ, int stringLength);
 
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern Result VMOpen(string filename);
@@ -36,7 +36,7 @@ namespace TimpLaba2_VirtualMemory.Models
 
         public void CreateFile(string fileName, VMFileType valueType)
         {
-            Result result = VMCreate(fileName, 10001, valueType.StringFileType, valueType.TypeLength);
+            Result result = VMCreate(fileName, 10001, valueType.StringFileType, valueType.TypeLength ?? 0);
 
             if (!result.IsSuccess())
             {
