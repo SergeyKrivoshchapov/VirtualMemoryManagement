@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="TerminalCommandMenu/TerminalCommandMenu.csproj" />
   <Project Path="TimpLaba2_VirtualMemory/TimpLaba2_VirtualMemory.csproj" />
 </Solution>
