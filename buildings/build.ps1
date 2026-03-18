@@ -3,12 +3,10 @@ param(
     [string]$Configuration = "Debug"
 )
 
-# If no output dir specified, try to find the C# project output directory
 if ([string]::IsNullOrEmpty($OutputDir)) {
     $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
     $ProjectDir = Split-Path -Parent $ScriptDir
 
-    # Try to find CLI project directory
     $PossiblePaths = @(
         (Join-Path $ProjectDir "CLI" "TimpLaba2_VirtualMemory" "TimpLaba2_VirtualMemory" "bin" $Configuration "net10.0"),
         (Join-Path $ProjectDir "CLI" "TimpLaba2_VirtualMemory" "bin" $Configuration "net10.0"),
@@ -23,7 +21,6 @@ if ([string]::IsNullOrEmpty($OutputDir)) {
         }
     }
 
-    # If no existing path found, use the first one
     if ([string]::IsNullOrEmpty($OutputDir)) {
         $OutputDir = $PossiblePaths[0]
     }
@@ -184,3 +181,6 @@ Write-Host "1. Copy $DLLName to your C# project"
 Write-Host "2. Create C# P/Invoke declarations from $HeaderPath"
 Write-Host "3. Reference the DLL in your C# project"
 
+Write-Host ""
+Write-Host "Press any key to exit..." -ForegroundColor Cyan
+Read-Host
