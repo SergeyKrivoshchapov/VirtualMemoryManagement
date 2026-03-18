@@ -157,7 +157,6 @@ namespace TimpLaba2_VirtualMemory.Presenters
         {
             if (_valueWorker == null)
             {
-                _view?.DisplayError("File doesn't open.");
                 return;
             }
 

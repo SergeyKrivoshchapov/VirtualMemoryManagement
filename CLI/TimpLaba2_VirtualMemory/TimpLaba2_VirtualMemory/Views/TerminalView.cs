@@ -29,6 +29,9 @@ namespace TimpLaba2_VirtualMemory.Views
                 "  Print (<index>)\n" +
                 "      — выводит на экран значение элемента массива с номером <index>.\n" +
                 "\n" +
+                "  Close\n" +
+                "      — закрывает текущий открытый файл виртуальной памяти.\n" +
+                "\n" +
                 "  Help [fileName]\n" +
                 "      — выводит список команд на экран или в указанный файл.\n" +
                 "\n" +
@@ -52,6 +55,8 @@ namespace TimpLaba2_VirtualMemory.Views
                 = new Command((string[] args) => _presenter.InputValue(args));
             ICommand<string[]> printValueCommand
                 = new Command((string[] args) => _presenter.PrintValue(args));
+            ICommand<string[]> closeFileCommand
+                = new Command((string[] args) => _presenter.CloseFile(args));
             ICommand<string[]> helpCommand
                 = new Command((string[] args) => PrintHelp());
             ICommand<string[]> helpWriteCommand
@@ -69,6 +74,8 @@ namespace TimpLaba2_VirtualMemory.Views
                 new ArgumentFormatParser("(%a,%s%a)"), inputValueCommand);
             ITerminalCommand print = new TerminalCommand("Print",
                 new ArgumentFormatParser("(%a)"), printValueCommand);
+            ITerminalCommand close = new TerminalCommand("Close",
+                null, closeFileCommand);
             ITerminalCommand help = new TerminalCommand("Help",
                 null, helpCommand);
             ITerminalCommand helpWrite = new TerminalCommand("Help",
@@ -81,6 +88,7 @@ namespace TimpLaba2_VirtualMemory.Views
             RegisterCommand(open);
             RegisterCommand(input);
             RegisterCommand(print);
+            RegisterCommand(close);
             RegisterCommand(help);
             RegisterCommand(helpWrite);
             RegisterCommand(exit);
@@ -121,13 +129,7 @@ namespace TimpLaba2_VirtualMemory.Views
 
         private void ExitProgram()
         {
-            // Close file if it's open
-            if (_presenter != null)
-            {
-                _presenter.CloseFile(new string[] { });
-            }
-
-            // Then close the terminal
+            _presenter.CloseFile(Array.Empty<string>());
             Close();
         }
     }
