@@ -33,5 +33,9 @@ case $OS_TYPE in
         ;;
 esac
 
+echo ""
+echo "Press any key to exit..."
+read -n 1
+
 exit $?
 
