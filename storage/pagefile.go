@@ -155,9 +155,15 @@ func (pf *PageFile) WritePage(p *page.Page) error {
 		return errors.ErrFileOperation
 	}
 
-	// Sync to ensure data is written to disk
-	if err := pf.file.Sync(); err != nil {
-		return errors.ErrFileOperation
+	// Write padding to complete the page
+	pageSize := config.TotalPageSize(pf.arrayInfo.ElementSize)
+	actualDataWritten := config.BytesPerBitmap + config.PageDataSize(pf.arrayInfo.ElementSize)
+	paddingSize := pageSize - actualDataWritten
+	if paddingSize > 0 {
+		padding := make([]byte, paddingSize)
+		if _, err := pf.file.Write(padding); err != nil {
+			return errors.ErrFileOperation
+		}
 	}
 
 	return nil
@@ -165,6 +171,13 @@ func (pf *PageFile) WritePage(p *page.Page) error {
 
 func (pf *PageFile) ArrayInfo() *array.Info {
 	return pf.arrayInfo
+}
+
+func (pf *PageFile) Sync() error {
+	if pf.file != nil {
+		return pf.file.Sync()
+	}
+	return nil
 }
 
 func (pf *PageFile) calculatePageOffset(pageNumber int) int64 {

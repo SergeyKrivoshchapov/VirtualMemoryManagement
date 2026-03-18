@@ -9,6 +9,7 @@ type PageStorage interface {
 	ReadPage(pageNumber int) (*page.Page, error)
 	WritePage(p *page.Page) error
 	Close() error
+	Sync() error
 	ArrayInfo() *array.Info
 }
 

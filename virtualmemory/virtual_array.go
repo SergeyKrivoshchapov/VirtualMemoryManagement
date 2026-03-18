@@ -271,11 +271,9 @@ func (va *VirtualArray) loadInitialPages() error {
 
 		p, err := va.pageStorage.ReadPage(i)
 		if err != nil {
-			if errors.GetErrorCode(err) == errors.ErrCodeFileOperation {
-				p = page.New(i, va.arrayInfo.ElementSize)
-			} else {
-				return err
-			}
+			// Skip pages that can't be read - they'll be loaded on demand
+			// or newly created pages if they're accessed
+			continue
 		}
 
 		va.pageCache.Put(p)
@@ -354,6 +352,12 @@ func (va *VirtualArray) FlushDirtyPages() error {
 			p.Dirty = false
 		}
 	}
+
+	// Additional sync to ensure all data is written to disk
+	if err := va.pageStorage.Sync(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
