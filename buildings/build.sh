@@ -7,11 +7,9 @@ NC='\033[0m'
 
 PROJECT_NAME="VirtualMemoryManagement"
 
-# If no output dir specified, use default C# project output path
 if [ -z "$1" ]; then
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     PROJECT_DIR="$( cd "${SCRIPT_DIR}/.." && pwd )"
-    # Default output: CLI/TimpLaba2_VirtualMemory/TimpLaba2_VirtualMemory/bin/Debug/net10.0
     OUTPUT_DIR="${PROJECT_DIR}/CLI/TimpLaba2_VirtualMemory/TimpLaba2_VirtualMemory/bin/Debug/net10.0"
 else
     OUTPUT_DIR="$1"
@@ -28,7 +26,6 @@ fi
 GO_VERSION=$(go version | awk '{print $3}')
 echo -e "${GREEN}Go version: ${GO_VERSION}${NC}"
 
-# If PROJECT_DIR wasn't set from parameter, set it now
 if [ -z "$PROJECT_DIR" ]; then
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     PROJECT_DIR="$( cd "${SCRIPT_DIR}/.." && pwd )"
@@ -55,15 +52,12 @@ GOOS=linux GOARCH=amd64 go build \
     -o "${DLL_PATH}" \
     .
 
-# Check if build was successful
 if [ $? -eq 0 ]; then
     echo -e "${GREEN} Build successful!${NC}"
 
-    # Generate header file for C# interop
     HEADER_FILE="${OUTPUT_DIR}/vmm.h"
     echo -e "${YELLOW}Generating C header file...${NC}"
 
-    # Simple header generation (basic structure)
     cat > "${HEADER_FILE}" << 'EOF'
 #ifndef VMM_H
 #define VMM_H
