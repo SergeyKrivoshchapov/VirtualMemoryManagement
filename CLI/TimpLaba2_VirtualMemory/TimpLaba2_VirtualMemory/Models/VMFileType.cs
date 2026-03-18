@@ -52,6 +52,7 @@ namespace TimpLaba2_VirtualMemory.Models
         public VMFileType(FileType filetype, int? typeLength)
         {
             _fileType = filetype;
+            TypeLength = typeLength;
         }
 
     }
