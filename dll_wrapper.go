@@ -58,12 +58,16 @@ func VMWrite(handle C.int, index C.int, value *C.char) C.Result {
 }
 
 //export VMHelp
-func VMHelp(filename *C.char) C.Result {
+func VMHelp(filename *C.char, helpText *C.char) C.Result {
 	var filenameGo string
 	if filename != nil {
 		filenameGo = C.GoString(filename)
 	}
-	return toGoResultC(api.VMHelp(filenameGo))
+	var helpTextGo string
+	if helpText != nil {
+		helpTextGo = C.GoString(helpText)
+	}
+	return toGoResultC(api.VMHelp(filenameGo, helpTextGo))
 }
 
 //export VMStats

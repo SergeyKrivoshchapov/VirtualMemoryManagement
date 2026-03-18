@@ -32,7 +32,7 @@ extern Result VMOpen(const char* filename);
 extern Result VMClose(int handle);
 extern Result VMRead(int handle, int index);
 extern Result VMWrite(int handle, int index, const char* value);
-extern Result VMHelp(const char* filename);
+extern Result VMHelp(const char* filename, const char* helpText);
 
 #endif
 EOF

@@ -45,7 +45,7 @@ extern Result __cdecl VMOpen(const char* filename);
 extern Result __cdecl VMClose(int handle);
 extern Result __cdecl VMRead(int handle, int index);
 extern Result __cdecl VMWrite(int handle, int index, const char* value);
-extern Result __cdecl VMHelp(const char* filename);
+extern Result __cdecl VMHelp(const char* filename, const char* helpText);
 
 #endif
 "@
