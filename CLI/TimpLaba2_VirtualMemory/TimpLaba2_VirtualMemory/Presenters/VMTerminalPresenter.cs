@@ -145,7 +145,7 @@ namespace TimpLaba2_VirtualMemory.Presenters
 
             try
             {
-                _valueWorker.ReadValue(index);
+                _view?.DisplayMessage(_valueWorker.ReadValue(index));
             }
             catch (Exception ex)
             {
