@@ -5,10 +5,8 @@ OUTPUT_DIR="${1:-.}"
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     OS_TYPE="linux"
-    SCRIPT_NAME="build.sh"
 elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
     OS_TYPE="windows"
-    SCRIPT_NAME="build.ps1"
 else
     OS_TYPE="unknown"
 fi
@@ -23,11 +21,11 @@ echo ""
 case $OS_TYPE in
     linux|macos)
         echo "Running Linux build script"
-        bash "$SCRIPT_DIR/build.sh" "$OUTPUT_DIR"
+        bash "$SCRIPT_DIR/buildings/build.sh" "$OUTPUT_DIR"
         ;;
     windows)
         echo "Running Windows build script"
-        powershell -NoProfile -ExecutionPolicy Bypass -File "$SCRIPT_DIR/build.ps1" -OutputDir "$OUTPUT_DIR"
+        powershell -NoProfile -ExecutionPolicy Bypass -File "$SCRIPT_DIR/buildings/build.ps1" -OutputDir "$OUTPUT_DIR"
         ;;
     *)
         echo "Error: Unknown operating system: $OSTYPE"

@@ -167,7 +167,7 @@ func VMWrite(handle int, index int, value string) result.Result {
 	case array.TypeInt:
 		intVal, err := strconv.ParseInt(value, 10, 32)
 		if err != nil {
-			intVal = 0
+			return result.ErrorWithCode(errors.ErrCodeInvalidType, "Invalid integer value: "+err.Error())
 		}
 		writeValue = int32(intVal)
 	case array.TypeChar, array.TypeVarchar:
@@ -183,27 +183,13 @@ func VMWrite(handle int, index int, value string) result.Result {
 	return result.Success("Written")
 }
 
-func VMHelp(filename string) result.Result {
-	help := `Virtual Memory Manager Commands:
-Create <filename> <type> [<stringLength>] - Create new array
-Types: int, char(length), varchar(maxlength)
-Open <filename> - Open existing array file
+func VMHelp(filename string, help_text string) result.Result {
+	err := os.WriteFile(filename, []byte(help_text), 0644)
+	if err != nil {
+		return result.ErrorWithCode(errors.ErrCodeFileOperation, "failed to write help to file: "+err.Error())
+	}
 
-Close <handle> - Close array and flush to disk
-
-Read <handle> <index> - Read element at index
-
-Write <handle> <index> <value> - Write value to index
-  String values must be quoted: "my string"
-
-Stats <handle> - Show statistics
-
-Help [<filename>] - Show this help
-
-Exit - Close all and exit
-`
-
-	return result.Success(help)
+	return result.Success("Help written to file: " + filename)
 }
 
 func GetHandle() int {

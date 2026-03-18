@@ -1,7 +1,17 @@
 param(
-    [string]$OutputDir = ".",
+    [string]$OutputDir = "",
     [string]$Configuration = "Release"
 )
+
+# If no output dir specified, use default C# project output path
+if ([string]::IsNullOrEmpty($OutputDir)) {
+    $ProjectName = "VirtualMemoryManagement"
+    $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $ProjectDir = Split-Path -Parent $ScriptDir
+
+    # Default output: CLI\TimpLaba2_VirtualMemory\TimpLaba2_VirtualMemory\bin\Debug\net10.0
+    $OutputDir = Join-Path $ProjectDir "CLI" "TimpLaba2_VirtualMemory" "TimpLaba2_VirtualMemory" "bin" "Debug" "net10.0"
+}
 
 $ErrorActionPreference = "Stop"
 function Write-Success {
@@ -28,7 +38,8 @@ try {
 }
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ProjectDir = $ScriptDir
+# PROJECT_DIR is parent directory since scripts are in 'buildings' subfolder
+$ProjectDir = Split-Path -Parent $ScriptDir
 
 Write-Warning-Custom "Project directory: $ProjectDir"
 Write-Warning-Custom "Output directory: $OutputDir"

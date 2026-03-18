@@ -6,6 +6,10 @@ import (
 	"testing"
 )
 
+// KEEP_TEST_FILES_ENV - если установить переменную окружения, тестовые файлы не будут удаляться
+// Используется для отладки: export KEEP_TEST_FILES=1
+const KEEP_TEST_FILES_ENV = "KEEP_TEST_FILES"
+
 func TempDir(t *testing.T) string {
 	dir, err := os.MkdirTemp("", "vmm_test_")
 	if err != nil {
@@ -24,12 +28,23 @@ func TempFile(t *testing.T, dir, pattern string) string {
 }
 
 func CleanupDir(t *testing.T, dir string) {
+	// Если установлена переменная окружения KEEP_TEST_FILES, не удаляем файлы
+	if os.Getenv(KEEP_TEST_FILES_ENV) != "" {
+		t.Logf("Keeping test files at: %s", dir)
+		return
+	}
+
 	if err := os.RemoveAll(dir); err != nil {
 		t.Logf("Warning: failed to cleanup dir %s: %v", dir, err)
 	}
 }
 
 func RemoveFile(t *testing.T, path string) {
+	// Если установлена переменная окружения KEEP_TEST_FILES, не удаляем файлы
+	if os.Getenv(KEEP_TEST_FILES_ENV) != "" {
+		return
+	}
+
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		t.Logf("Warning: failed to remove file %s: %v", path, err)
 	}
@@ -67,4 +82,3 @@ func ReadFileBytes(t *testing.T, path string, offset int64, count int) []byte {
 func TempFilePath(dir, name string) string {
 	return filepath.Join(dir, name)
 }
-

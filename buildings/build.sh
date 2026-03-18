@@ -6,7 +6,17 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 PROJECT_NAME="VirtualMemoryManagement"
-OUTPUT_DIR="${1:-.}"
+
+# If no output dir specified, use default C# project output path
+if [ -z "$1" ]; then
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    PROJECT_DIR="$( cd "${SCRIPT_DIR}/.." && pwd )"
+    # Default output: CLI/TimpLaba2_VirtualMemory/TimpLaba2_VirtualMemory/bin/Debug/net10.0
+    OUTPUT_DIR="${PROJECT_DIR}/CLI/TimpLaba2_VirtualMemory/TimpLaba2_VirtualMemory/bin/Debug/net10.0"
+else
+    OUTPUT_DIR="$1"
+fi
+
 DLL_NAME="vmm.so"
 DLL_PATH="${OUTPUT_DIR}/${DLL_NAME}"
 echo -e "${YELLOW}Building ${PROJECT_NAME} for Linux${NC}"
@@ -18,8 +28,11 @@ fi
 GO_VERSION=$(go version | awk '{print $3}')
 echo -e "${GREEN}Go version: ${GO_VERSION}${NC}"
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PROJECT_DIR="$SCRIPT_DIR"
+# If PROJECT_DIR wasn't set from parameter, set it now
+if [ -z "$PROJECT_DIR" ]; then
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    PROJECT_DIR="$( cd "${SCRIPT_DIR}/.." && pwd )"
+fi
 
 echo -e "${YELLOW}Project directory: ${PROJECT_DIR}${NC}"
 echo -e "${YELLOW}Output directory: ${OUTPUT_DIR}${NC}"
