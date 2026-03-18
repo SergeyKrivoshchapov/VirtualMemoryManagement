@@ -2,40 +2,11 @@
 set -e
 
 OUTPUT_DIR="${1:-.}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    OS_TYPE="linux"
-elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
-    OS_TYPE="windows"
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+    powershell -NoProfile -ExecutionPolicy Bypass -File "$SCRIPT_DIR/buildings/build.ps1"
 else
-    OS_TYPE="unknown"
+    bash "$SCRIPT_DIR/buildings/build.sh" "$OUTPUT_DIR"
 fi
-
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-echo "Universal Build Script for VirtualMemoryManagement"
-echo "Detected OS: $OS_TYPE"
-echo "Output directory: $OUTPUT_DIR"
-echo ""
-
-case $OS_TYPE in
-    linux|macos)
-        echo "Running Linux build script"
-        bash "$SCRIPT_DIR/buildings/build.sh" "$OUTPUT_DIR"
-        ;;
-    windows)
-        echo "Running Windows build script"
-        powershell -NoProfile -ExecutionPolicy Bypass -File "$SCRIPT_DIR/buildings/build.ps1" -OutputDir "$OUTPUT_DIR"
-        ;;
-    *)
-        echo "Error: Unknown operating system: $OSTYPE"
-        exit 1
-        ;;
-esac
-
-echo ""
-echo "Press any key to exit..."
-read -n 1
-
-exit $?
 

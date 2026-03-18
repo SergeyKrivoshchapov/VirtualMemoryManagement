@@ -1,64 +1,21 @@
 #!/bin/bash
 set -e
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
 
-PROJECT_NAME="VirtualMemoryManagement"
+PROJECT_DIR="$(dirname "$0" | xargs dirname)"
+OUTPUT_DIR="${1:-.}"
 
-if [ -z "$1" ]; then
-    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    PROJECT_DIR="$( cd "${SCRIPT_DIR}/.." && pwd )"
-    OUTPUT_DIR="${PROJECT_DIR}/CLI/TimpLaba2_VirtualMemory/TimpLaba2_VirtualMemory/bin/Debug/net10.0"
-else
-    OUTPUT_DIR="$1"
-fi
+mkdir -p "$OUTPUT_DIR"
+rm -f "$OUTPUT_DIR/vmm.so" "$OUTPUT_DIR/vmm.dylib" "$OUTPUT_DIR/vmm.h"
 
-DLL_NAME="vmm.so"
-DLL_PATH="${OUTPUT_DIR}/${DLL_NAME}"
-echo -e "${YELLOW}Building ${PROJECT_NAME} for Linux${NC}"
-if ! command -v go &> /dev/null; then
-    echo -e "${RED}Go is not installed${NC}"
-    exit 1
-fi
+cd "$PROJECT_DIR"
 
-GO_VERSION=$(go version | awk '{print $3}')
-echo -e "${GREEN}Go version: ${GO_VERSION}${NC}"
+export CGO_ENABLED=1
 
-if [ -z "$PROJECT_DIR" ]; then
-    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    PROJECT_DIR="$( cd "${SCRIPT_DIR}/.." && pwd )"
-fi
-
-echo -e "${YELLOW}Project directory: ${PROJECT_DIR}${NC}"
-echo -e "${YELLOW}Output directory: ${OUTPUT_DIR}${NC}"
-
-echo -e "${YELLOW}Cleaning previous builds${NC}"
-rm -f "${DLL_PATH}"
-go clean -cache 2>/dev/null || true
-
-echo -e "${YELLOW}Downloading dependencies${NC}"
-cd "${PROJECT_DIR}"
 go mod download
 go mod tidy
+go build -buildmode=c-shared -o "$OUTPUT_DIR/vmm.so" .
 
-echo -e "${YELLOW}Building DLL${NC}"
-cd "${PROJECT_DIR}"
-
-GOOS=linux GOARCH=amd64 go build \
-    -tags dll \
-    -buildmode=c-shared \
-    -o "${DLL_PATH}" \
-    .
-
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN} Build successful!${NC}"
-
-    HEADER_FILE="${OUTPUT_DIR}/vmm.h"
-    echo -e "${YELLOW}Generating C header file...${NC}"
-
-    cat > "${HEADER_FILE}" << 'EOF'
+cat > "$OUTPUT_DIR/vmm.h" << 'EOF'
 #ifndef VMM_H
 #define VMM_H
 
@@ -70,28 +27,18 @@ typedef struct {
     int32_t error_code;
 } Result;
 
-// Virtual Memory Manager Functions
-int VMCreate(const char* filename, int size, const char* typ, int stringLength);
-int VMOpen(const char* filename);
-int VMClose(int handle);
-Result VMRead(int handle, int index);
-int VMWrite(int handle, int index, const char* value);
-Result VMHelp(const char* filename);
+extern Result VMCreate(const char* filename, int size, const char* typ, int stringLength);
+extern Result VMOpen(const char* filename);
+extern Result VMClose(int handle);
+extern Result VMRead(int handle, int index);
+extern Result VMWrite(int handle, int index, const char* value);
+extern Result VMHelp(const char* filename);
 
-#endif // VMM_H
+#endif
 EOF
 
-    echo -e "${GREEN} Header file generated: ${HEADER_FILE}${NC}"
-
-    # Check file size
-    DLL_SIZE=$(ls -lh "${DLL_PATH}" | awk '{print $5}')
-    echo -e "${GREEN} DLL size: ${DLL_SIZE}${NC}"
-    echo -e "${GREEN} DLL path: ${DLL_PATH}${NC}"
-
-    echo ""
-    echo -e "${GREEN}Build completed successfully!${NC}"
-else
-    echo -e "${RED} Build failed!${NC}"
-    exit 1
-fi
-
+echo ""
+echo "DLL saved to: $(cd "$OUTPUT_DIR" && pwd)/vmm.so"
+echo "Header saved to: $(cd "$OUTPUT_DIR" && pwd)/vmm.h"
+echo ""
+read -p "Press Enter to exit..."
