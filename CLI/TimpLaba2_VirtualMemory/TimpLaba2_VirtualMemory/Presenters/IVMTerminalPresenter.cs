@@ -16,7 +16,5 @@ namespace TimpLaba2_VirtualMemory.Presenters
         void InputValue(T arguments);
 
         void PrintValue(T arguments);
-
-        void CloseFile(T arguments);
     }
 }

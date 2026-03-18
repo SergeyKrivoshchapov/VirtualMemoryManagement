@@ -41,11 +41,6 @@ func VMOpen(filename *C.char) C.Result {
 	return toGoResultC(api.VMOpen(filenameGo))
 }
 
-//export VMClose
-func VMClose(handle C.int) C.Result {
-	return toGoResultC(api.VMClose(int(handle)))
-}
-
 //export VMRead
 func VMRead(handle C.int, index C.int) C.Result {
 	return toGoResultC(api.VMRead(int(handle), int(index)))

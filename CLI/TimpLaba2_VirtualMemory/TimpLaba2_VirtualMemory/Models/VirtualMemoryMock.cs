@@ -16,11 +16,6 @@ namespace TimpLaba2_VirtualMemory.Models
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern Result VMOpen(string filename);
 
-        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern Result VMClose(int handle);
-
-
-
         private static IVirtualMemmoryValueWorker? _openFile = null;
 
         private static int? _openFileHandle = null;
@@ -49,7 +44,6 @@ namespace TimpLaba2_VirtualMemory.Models
             if (_openFile != null)
             {
                 _openFile.Dispose();
-                CloseFile();
             }
 
             Result result = VMOpen(fileName);
@@ -63,16 +57,6 @@ namespace TimpLaba2_VirtualMemory.Models
             _openFile = new VMValueMock((int)_openFileHandle);
 
             return _openFile;
-        }
-
-        public void CloseFile()
-        {
-            if (_openFileHandle != null)
-            {
-                VMClose((int)_openFileHandle);
-                _openFile = null;
-                _openFileHandle = null;
-            }
         }
     }
 
