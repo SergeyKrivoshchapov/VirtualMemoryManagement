@@ -140,15 +140,15 @@ namespace TimpLaba2_VirtualMemory.Models
     {
         public int success;
 
-        public int error_code;
-
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
         public byte[] data;
+
+        public int error_code;
     }
 
     public static class ResultExtensions
     {
-        public static bool IsSuccess(this Result result) => result.success != 0;
+        public static bool IsSuccess(this Result result) => result.success == 1;
 
         public static string GetDataAsString(this Result result)
         {

@@ -38,7 +38,7 @@ namespace TimpLaba2_VirtualMemory.Views
                 new ArgumentFormatParser("%a"), openFileCommand);
             ITerminalCommand input = new TerminalCommand("Input",
                 new ArgumentFormatParser("(%a,%s%a)"), inputValueCommand);
-            ITerminalCommand print = new TerminalCommand("Input",
+            ITerminalCommand print = new TerminalCommand("Print",
                 new ArgumentFormatParser("(%a)"), printValueCommand);
             ITerminalCommand help = new TerminalCommand("Help",
                 null, helpCommand);
@@ -76,11 +76,11 @@ namespace TimpLaba2_VirtualMemory.Views
                 "        создает структуры в памяти и считывает заданное количество\n" +
                 "        страниц (>= 3), устанавливая абсолютный номер, статус и время записи.\n" +
                 "\n" +
-                "  Input(<index>, <value>)\n" +
+                "  Input (<index>, <value>)\n" +
                 "      — записывает значение в элемент массива с номером <index>.\n" +
                 "        Строковое значение нужно заключать в кавычки.\n" +
                 "\n" +
-                "  Print(<index>)\n" +
+                "  Print (<index>)\n" +
                 "      — выводит на экран значение элемента массива с номером <index>.\n" +
                 "\n" +
                 "  Help [fileName]\n" +

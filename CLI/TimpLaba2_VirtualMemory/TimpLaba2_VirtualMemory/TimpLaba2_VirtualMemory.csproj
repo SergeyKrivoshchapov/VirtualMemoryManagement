@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TUI.TerminalInputer" Version="1.1.1" />
+    <ProjectReference Include="..\TerminalCommandMenu\TerminalCommandMenu.csproj" />
   </ItemGroup>
 
 </Project>

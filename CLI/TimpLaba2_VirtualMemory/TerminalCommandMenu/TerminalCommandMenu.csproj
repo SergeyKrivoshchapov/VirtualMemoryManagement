@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+	  <PackageId>TUI.TerminalInputer</PackageId>
+	  <Version>1.1.1</Version>
+	  <Authors>mrred</Authors>
+	  <Description>A simple terminal prompt with commands. The package contains several command line implementations, commands, parsers, and more.</Description>
+	  <PackageTags>TUI; Terminal; TerminalInputer</PackageTags>
+	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+	  
+  </PropertyGroup>
+
+</Project>
