@@ -62,6 +62,11 @@ func (pf *PageFile) Create(size int, typ array.Type, stringLength int) error {
 		}
 	}
 
+	// Sync to ensure all data is written to disk
+	if err := f.Sync(); err != nil {
+		return errors.ErrFileOperation
+	}
+
 	return nil
 }
 
@@ -95,6 +100,10 @@ func (pf *PageFile) Open(filename string) error {
 
 func (pf *PageFile) Close() error {
 	if pf.file != nil {
+		// Sync to ensure all pending data is written to disk
+		if err := pf.file.Sync(); err != nil {
+			return errors.ErrFileOperation
+		}
 		return pf.file.Close()
 	}
 	return nil
@@ -143,6 +152,11 @@ func (pf *PageFile) WritePage(p *page.Page) error {
 	}
 
 	if _, err := pf.file.Write(p.Data()); err != nil {
+		return errors.ErrFileOperation
+	}
+
+	// Sync to ensure data is written to disk
+	if err := pf.file.Sync(); err != nil {
 		return errors.ErrFileOperation
 	}
 

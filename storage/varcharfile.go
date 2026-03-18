@@ -34,6 +34,10 @@ func (vf *VarcharFile) Create() error {
 		return errors.ErrFileOperation
 	}
 	vf.offset = 1
+	// Sync to ensure data is written to disk
+	if err := vf.file.Sync(); err != nil {
+		return errors.ErrFileOperation
+	}
 	return nil
 }
 
@@ -57,6 +61,10 @@ func (vf *VarcharFile) Open() error {
 
 func (vf *VarcharFile) Close() error {
 	if vf.file != nil {
+		// Sync to ensure all pending data is written to disk
+		if err := vf.file.Sync(); err != nil {
+			return errors.ErrFileOperation
+		}
 		return vf.file.Close()
 	}
 	return nil
