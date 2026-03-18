@@ -1,16 +1,32 @@
 param(
     [string]$OutputDir = "",
-    [string]$Configuration = "Release"
+    [string]$Configuration = "Debug"
 )
 
-# If no output dir specified, use default C# project output path
+# If no output dir specified, try to find the C# project output directory
 if ([string]::IsNullOrEmpty($OutputDir)) {
-    $ProjectName = "VirtualMemoryManagement"
     $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
     $ProjectDir = Split-Path -Parent $ScriptDir
 
-    # Default output: CLI\TimpLaba2_VirtualMemory\TimpLaba2_VirtualMemory\bin\Debug\net10.0
-    $OutputDir = Join-Path $ProjectDir "CLI" "TimpLaba2_VirtualMemory" "TimpLaba2_VirtualMemory" "bin" "Debug" "net10.0"
+    # Try to find CLI project directory
+    $PossiblePaths = @(
+        (Join-Path $ProjectDir "CLI" "TimpLaba2_VirtualMemory" "TimpLaba2_VirtualMemory" "bin" $Configuration "net10.0"),
+        (Join-Path $ProjectDir "CLI" "TimpLaba2_VirtualMemory" "bin" $Configuration "net10.0"),
+        (Join-Path $ProjectDir "CLI" "bin" $Configuration "net10.0")
+    )
+
+    $OutputDir = $null
+    foreach ($path in $PossiblePaths) {
+        if (Test-Path $path) {
+            $OutputDir = $path
+            break
+        }
+    }
+
+    # If no existing path found, use the first one
+    if ([string]::IsNullOrEmpty($OutputDir)) {
+        $OutputDir = $PossiblePaths[0]
+    }
 }
 
 $ErrorActionPreference = "Stop"
@@ -44,6 +60,11 @@ $ProjectDir = Split-Path -Parent $ScriptDir
 Write-Warning-Custom "Project directory: $ProjectDir"
 Write-Warning-Custom "Output directory: $OutputDir"
 Write-Warning-Custom "Configuration: $Configuration"
+Write-Host ""
+Write-Host "TIP: You can override output directory:" -ForegroundColor Cyan
+Write-Host "  .\build.ps1 -OutputDir 'C:\your\custom\path'" -ForegroundColor Gray
+Write-Host "  .\build.ps1 -Configuration Release" -ForegroundColor Gray
+Write-Host ""
 
 if (!(Test-Path $OutputDir)) {
     New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
