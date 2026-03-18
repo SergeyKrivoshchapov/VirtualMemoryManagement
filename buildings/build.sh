@@ -2,7 +2,7 @@
 set -e
 
 PROJECT_DIR="$(dirname "$0" | xargs dirname)"
-OUTPUT_DIR="${1:-.}"
+OUTPUT_DIR="$PROJECT_DIR/CLI/TimpLaba2_VirtualMemory/TimpLaba2_VirtualMemory/bin/Debug/net10.0"
 
 mkdir -p "$OUTPUT_DIR"
 rm -f "$OUTPUT_DIR/vmm.so" "$OUTPUT_DIR/vmm.dylib" "$OUTPUT_DIR/vmm.h"

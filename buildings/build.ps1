@@ -1,5 +1,5 @@
 $ProjectDir = Split-Path -Parent $MyInvocation.MyCommand.Path | Split-Path -Parent
-$OutputDir = "."
+$OutputDir = Join-Path $ProjectDir "CLI\TimpLaba2_VirtualMemory\TimpLaba2_VirtualMemory\bin\Debug\net10.0"
 $DLLPath = Join-Path $OutputDir "vmm.dll"
 $HeaderPath = Join-Path $OutputDir "vmm.h"
 
