@@ -166,6 +166,11 @@ func (pf *PageFile) WritePage(p *page.Page) error {
 		}
 	}
 
+	// Sync to ensure page is written to disk immediately
+	if err := pf.file.Sync(); err != nil {
+		return errors.ErrFileOperation
+	}
+
 	return nil
 }
 

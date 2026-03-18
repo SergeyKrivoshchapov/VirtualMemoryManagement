@@ -57,7 +57,7 @@ namespace TimpLaba2_VirtualMemory.Views
             ICommand<string[]> helpWriteCommand
                 = new Command((string[] args) => WriteHelp(args));
             ICommand<string[]> exitTerminalCommand
-                = new Command((string[] args) => Close());
+                = new Command((string[] args) => ExitProgram());
 
             ITerminalCommand createInt = new TerminalCommand("Create",
                 new ArgumentFormatParser("%a(%w)"), createFileCommand);
@@ -117,6 +117,18 @@ namespace TimpLaba2_VirtualMemory.Views
             {
                 _terminal.Write($"Failed to write help: {ex.Message}");
             }
+        }
+
+        private void ExitProgram()
+        {
+            // Close file if it's open
+            if (_presenter != null)
+            {
+                _presenter.CloseFile(new string[] { });
+            }
+
+            // Then close the terminal
+            Close();
         }
     }
 }

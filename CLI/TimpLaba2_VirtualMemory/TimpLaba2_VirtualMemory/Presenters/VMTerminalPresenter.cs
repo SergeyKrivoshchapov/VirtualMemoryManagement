@@ -152,5 +152,25 @@ namespace TimpLaba2_VirtualMemory.Presenters
                 _view?.DisplayError(ex.Message);
             }
         }
+
+        public void CloseFile(string[] arguments)
+        {
+            if (_valueWorker == null)
+            {
+                _view?.DisplayError("File doesn't open.");
+                return;
+            }
+
+            try
+            {
+                _fileWorker.CloseFile();
+                _valueWorker = null;
+                _view?.DisplayMessage("File closed successfully.\n");
+            }
+            catch (Exception ex)
+            {
+                _view?.DisplayError(ex.Message);
+            }
+        }
     }
 }
