@@ -137,6 +137,16 @@ func (va *VirtualArray) Read(index int) (interface{}, error) {
 		return nil, err
 	}
 
+	// Check if element was ever written (bit set in bitmap)
+	bitIndex := index % config.BitsPerPage
+	isBitSet, err := p.IsBitSet(bitIndex)
+	if err != nil {
+		return nil, err
+	}
+	if !isBitSet {
+		return nil, errors.NewError(errors.ErrCodeIndexOutOfRange, "Element at index "+strconv.Itoa(index)+" has not been written")
+	}
+
 	switch va.arrayInfo.Type {
 	case array.TypeInt:
 		return va.readInt(p.Data(), offset), nil
