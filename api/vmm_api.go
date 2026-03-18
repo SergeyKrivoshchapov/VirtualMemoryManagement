@@ -63,6 +63,10 @@ func VMCreate(filename string, size int, typ string, stringLength int) result.Re
 		return result.Error(err)
 	}
 
+	if err := va.FlushDirtyPages(); err != nil {
+		return result.Error(err)
+	}
+
 	if err := va.Close(); err != nil {
 		return result.Error(err)
 	}
@@ -80,6 +84,10 @@ func VMOpen(filename string) result.Result {
 
 	va, err := virtualmemory.OpenWithCacheSize(filename, cacheSize)
 	if err != nil {
+		return result.Error(err)
+	}
+
+	if err := va.FlushDirtyPages(); err != nil {
 		return result.Error(err)
 	}
 
@@ -148,6 +156,10 @@ func VMRead(handle int, index int) result.Result {
 		resultStr = ""
 	}
 
+	if err := va.FlushDirtyPages(); err != nil {
+		return result.Error(err)
+	}
+
 	return result.Success(resultStr)
 }
 
@@ -177,6 +189,10 @@ func VMWrite(handle int, index int, value string) result.Result {
 	}
 
 	if err := va.Write(index, writeValue); err != nil {
+		return result.Error(err)
+	}
+
+	if err := va.FlushDirtyPages(); err != nil {
 		return result.Error(err)
 	}
 
@@ -220,6 +236,10 @@ func VMStats(handle int) result.Result {
 
 	if !exists {
 		return result.ErrorWithCode(errors.ErrCodeInvalidHandle, "Invalid handle")
+	}
+
+	if err := va.FlushDirtyPages(); err != nil {
+		return result.Error(err)
 	}
 
 	stats := va.GetStats()
