@@ -137,27 +137,36 @@ func (va *VirtualArray) Read(index int) (interface{}, error) {
 		return nil, err
 	}
 
-	// Check if element was ever written (bit set in bitmap)
-	bitIndex := index % config.BitsPerPage
-	isBitSet, err := p.IsBitSet(bitIndex)
-	if err != nil {
-		return nil, err
-	}
-	if !isBitSet {
-		return nil, errors.NewError(errors.ErrCodeIndexOutOfRange, "Element at index "+strconv.Itoa(index)+" has not been written")
-	}
-
 	switch va.arrayInfo.Type {
 	case array.TypeInt:
+		// Check if element was ever written (bit set in bitmap)
+		bitIndex := index % config.BitsPerPage
+		isBitSet, err := p.IsBitSet(bitIndex)
+		if err != nil {
+			return nil, err
+		}
+		if !isBitSet {
+			return nil, errors.NewError(errors.ErrCodeIndexOutOfRange, "Element at index "+strconv.Itoa(index)+" has not been written")
+		}
 		return va.readInt(p.Data(), offset), nil
 
 	case array.TypeChar:
+		// Check if element was ever written (bit set in bitmap)
+		bitIndex := index % config.BitsPerPage
+		isBitSet, err := p.IsBitSet(bitIndex)
+		if err != nil {
+			return nil, err
+		}
+		if !isBitSet {
+			return nil, errors.NewError(errors.ErrCodeIndexOutOfRange, "Element at index "+strconv.Itoa(index)+" has not been written")
+		}
 		return va.readChar(p.Data(), offset, va.arrayInfo.StringLength), nil
 
 	case array.TypeVarchar:
+		// For varchar, offset=0 means "not written"
 		varcharOffset := int64(va.readInt(p.Data(), offset))
 		if varcharOffset == 0 {
-			return "", nil
+			return nil, errors.NewError(errors.ErrCodeIndexOutOfRange, "Element at index "+strconv.Itoa(index)+" has not been written")
 		}
 		if va.varcharStore == nil {
 			return "", errors.ErrFileOperation
