@@ -13,7 +13,7 @@ namespace MainProgrma
 
             IVMTerminalPresenter<string[]> presenter = new VMTerminalPresenter(null,
                 VirtualMemoryMock.Instance);
-            var view = new TerminalView(presenter, "$root", new Terminal(),
+            var view = new TerminalView(presenter, "VM", new Terminal(),
                 new CommandParser(), new ErrorSender(new Terminal()), new HelpWriter());
 
             presenter.View = view;
