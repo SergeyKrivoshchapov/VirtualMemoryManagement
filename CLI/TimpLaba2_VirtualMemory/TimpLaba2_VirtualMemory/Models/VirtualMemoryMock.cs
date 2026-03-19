@@ -29,9 +29,9 @@ namespace TimpLaba2_VirtualMemory.Models
 
         public static VirtualMemoryMock Instance => _instance.Value;
 
-        public void CreateFile(string fileName, VMFileType valueType)
+        public void CreateFile(string fileName, int size, VMFileType valueType)
         {
-            Result result = VMCreate(fileName, 10001, valueType.StringFileType, valueType.TypeLength ?? 0);
+            Result result = VMCreate(fileName, size, valueType.StringFileType, valueType.TypeLength ?? 0);
 
             if (!result.IsSuccess())
             {

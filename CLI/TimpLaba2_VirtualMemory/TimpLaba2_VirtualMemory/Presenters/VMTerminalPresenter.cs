@@ -23,7 +23,7 @@ namespace TimpLaba2_VirtualMemory.Presenters
 
         public void CreateFile(string[] arguments)
         {
-            if (arguments.Length < 2 || arguments.Length > 3)
+            if (arguments.Length < 3 || arguments.Length > 4)
             {
                 _view?.DisplayError("Not enough arguments for Create command.");
                 return;
@@ -31,13 +31,13 @@ namespace TimpLaba2_VirtualMemory.Presenters
 
             VMFileType.FileType? fileType;
 
-            if (VMFileType.TryConvertStringToFileType(arguments[1], out fileType))
+            if (VMFileType.TryConvertStringToFileType(arguments[2], out fileType))
             {
-                if (arguments.Length == 2)
+                if (arguments.Length == 3)
                 {
                     try
                     {
-                        _fileWorker.CreateFile(arguments[0], 
+                        _fileWorker.CreateFile(arguments[0], int.Parse(arguments[1]), 
                             new VMFileType((VMFileType.FileType)fileType, null));
                     }
                     catch (Exception ex)
@@ -49,7 +49,7 @@ namespace TimpLaba2_VirtualMemory.Presenters
                 {
                     int typeLength;
 
-                    if (!int.TryParse(arguments[2], out typeLength))
+                    if (!int.TryParse(arguments[3], out typeLength))
                     {
                         _view?.DisplayError("Invalid type length argument for Create command.");
                         return;
@@ -57,7 +57,7 @@ namespace TimpLaba2_VirtualMemory.Presenters
 
                     try
                     {
-                        _fileWorker.CreateFile(arguments[0], 
+                        _fileWorker.CreateFile(arguments[0], int.Parse(arguments[1]),
                             new VMFileType((VMFileType.FileType)fileType, typeLength));
                     }
                     catch (Exception ex)

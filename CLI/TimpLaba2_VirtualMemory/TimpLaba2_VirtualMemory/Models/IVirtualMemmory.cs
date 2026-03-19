@@ -6,7 +6,7 @@ namespace TimpLaba2_VirtualMemory.Models
 {
     public interface IVirtualMemmoryFileWorker
     {
-        void CreateFile(string fileName, VMFileType valueType);
+        void CreateFile(string fileName, int size, VMFileType valueType);
 
         IVirtualMemmoryValueWorker OpenFile(string fileName);
     }

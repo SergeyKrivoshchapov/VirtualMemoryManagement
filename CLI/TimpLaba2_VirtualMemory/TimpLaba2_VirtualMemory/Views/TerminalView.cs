@@ -14,7 +14,7 @@ namespace TimpLaba2_VirtualMemory.Views
         protected IHelpWriter<string[]> _helpWriter;
 
         private string _helpText = "Available commands:\n" +
-                "  Create <fileName>(int | char(<len>) | varchar(<maxLen>))\n" +
+                "  Create <fileName>(size, int | char(<len>) | varchar(<maxLen>))\n" +
                 "      — создает все необходимые структуры в памяти и файлы на диске.\n" +
                 "\n" +
                 "  Open <fileName>\n" +
@@ -60,9 +60,9 @@ namespace TimpLaba2_VirtualMemory.Views
                 = new Command((string[] args) => ExitProgram());
 
             ITerminalCommand createInt = new TerminalCommand("Create",
-                new ArgumentFormatParser("%a(%w)"), createFileCommand);
+                new ArgumentFormatParser("%a(%d,%s%w)"), createFileCommand);
             ITerminalCommand createChar = new TerminalCommand("Create",
-                new ArgumentFormatParser("%a(%w(%d))"), createFileCommand);
+                new ArgumentFormatParser("%a(%d,%s%w(%d))"), createFileCommand);
             ITerminalCommand open = new TerminalCommand("Open",
                 new ArgumentFormatParser("%a"), openFileCommand);
             ITerminalCommand input = new TerminalCommand("Input",
