@@ -84,7 +84,6 @@ namespace TimpLaba2_VirtualMemory.Views
             RegisterCommand(help);
             RegisterCommand(helpWrite);
             RegisterCommand(exit);
-            RegisterCommand(exit);
         }
 
         public void DisplayMessage(string message)
