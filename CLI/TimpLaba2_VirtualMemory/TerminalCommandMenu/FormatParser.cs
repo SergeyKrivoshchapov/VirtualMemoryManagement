@@ -8,7 +8,7 @@ namespace TerminalCommandMenu
     {
         private static readonly HashSet<char> Separators = new HashSet<char>
         {
-            '(', ')', '[', ']', '{', '}', '<', '>',
+            '(', ')', '[', ']', '{', '<', '>',
             '/', '\\', '|', ',', '.', ':', ';',
             '-', '+', '*', '=', '_'
         };
@@ -63,6 +63,31 @@ namespace TerminalCommandMenu
 
                         result.Add(arg);
                     }
+                    else if (spec == 'd')
+                    {
+                        fi++;
+
+                        char? nextDelimiter = GetNextDelimiter(format, fi);
+
+                        string arg = ReadNumberArgument(
+                            input,
+                            ref ii,
+                            nextDelimiter
+                        );
+
+                        result.Add(arg);
+                    }
+                    else if (spec == 'q')
+                    {
+                        fi++;
+
+                        string arg = ReadQuotedArgument(
+                            input,
+                            ref ii
+                        );
+
+                        result.Add(arg);
+                    }
                     else if (spec == 's')
                     {
                         if (ii >= input.Length || input[ii] != ' ')
@@ -107,10 +132,14 @@ namespace TerminalCommandMenu
 
                     char s = format[i + 1];
 
-                    if (s != 'a' && s != 's' && s != 'w')
+                    if (s != 'a' && s != 's' && s != 'w' && s != 'd' && s != 'q')
                         throw new Exception("Invalid specifier");
 
-                    bool isArg = (s == 'a' || s == 'w');
+                    bool isArg =
+                        s == 'a' ||
+                        s == 'w' ||
+                        s == 'd' ||
+                        s == 'q';
 
                     if (isArg && lastWasArg)
                         throw new Exception("Cannot use two arguments in a row");
@@ -210,6 +239,68 @@ namespace TerminalCommandMenu
             }
 
             return input.Substring(start, index - start);
+        }
+
+        private static string ReadNumberArgument(
+            string input,
+            ref int index,
+            char? delimiter
+        )
+        {
+            int start = index;
+
+            if (index < input.Length && input[index] == '-')
+                index++;
+
+            bool hasDigit = false;
+
+            while (index < input.Length)
+            {
+                char c = input[index];
+
+                if (delimiter != null && c == delimiter)
+                    break;
+
+                if (!char.IsDigit(c))
+                    throw new Exception("Invalid number");
+
+                hasDigit = true;
+                index++;
+            }
+
+            if (!hasDigit)
+                throw new Exception("Invalid number");
+
+            return input.Substring(start, index - start);
+        }
+
+        private static string ReadQuotedArgument(
+            string input,
+            ref int index
+        )
+        {
+            if (index >= input.Length || input[index] != '"')
+                throw new Exception("Expected quote");
+
+            index++; // skip "
+
+            int start = index;
+
+            while (index < input.Length)
+            {
+                if (input[index] == '"')
+                {
+                    string result =
+                        input.Substring(start, index - start);
+
+                    index++; // skip closing "
+                    return result;
+                }
+
+                index++;
+            }
+
+            throw new Exception("Unclosed quote");
         }
 
         private static bool IsOpen(char c)

@@ -62,13 +62,15 @@ namespace TimpLaba2_VirtualMemory.Views
             ITerminalCommand createInt = new TerminalCommand("Create",
                 new ArgumentFormatParser("%a(%w)"), createFileCommand);
             ITerminalCommand createChar = new TerminalCommand("Create",
-                new ArgumentFormatParser("%a(%w(%w))"), createFileCommand);
+                new ArgumentFormatParser("%a(%w(%d))"), createFileCommand);
             ITerminalCommand open = new TerminalCommand("Open",
                 new ArgumentFormatParser("%a"), openFileCommand);
             ITerminalCommand input = new TerminalCommand("Input",
-                new ArgumentFormatParser("(%a,%s%a)"), inputValueCommand);
+                new ArgumentFormatParser("(%d,%s%d)"), inputValueCommand);
+            ITerminalCommand inputStr = new TerminalCommand("Input",
+                new ArgumentFormatParser("(%d,%s%q)"), inputValueCommand);
             ITerminalCommand print = new TerminalCommand("Print",
-                new ArgumentFormatParser("(%a)"), printValueCommand);
+                new ArgumentFormatParser("(%d)"), printValueCommand);
             ITerminalCommand help = new TerminalCommand("Help",
                 null, helpCommand);
             ITerminalCommand helpWrite = new TerminalCommand("Help",
@@ -80,6 +82,7 @@ namespace TimpLaba2_VirtualMemory.Views
             RegisterCommand(createChar);
             RegisterCommand(open);
             RegisterCommand(input);
+            RegisterCommand(inputStr);
             RegisterCommand(print);
             RegisterCommand(help);
             RegisterCommand(helpWrite);
